@@ -48,7 +48,7 @@ jobs:
     env:
       HYPERFEM_TUTORIALS_GROUP: solvers
       HYPERFEM_TUTORIALS_PETSC: '1'
-      JULIA_NUM_THREADS: '4'
+      JULIA_NUM_THREADS: '1'   # with 4 threads the process crashed (signal 11) at the start of the PETSc part on Linux
     steps:
       - uses: actions/checkout@v4
       - uses: julia-actions/setup-julia@v2
@@ -56,6 +56,9 @@ jobs:
           version: '1'
       - uses: julia-actions/cache@v2
       - uses: julia-actions/julia-buildpkg@v1
+      - name: E13 with its output visible (diagnosis of PETSc on Linux)
+        run: HYPERFEM_TUTORIALS_FAST=1 julia --project=. src/E13_Solvers.jl
+        continue-on-error: true
       - uses: julia-actions/julia-runtest@v1
         with:
           coverage: false
