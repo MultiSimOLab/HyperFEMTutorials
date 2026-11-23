@@ -56,3 +56,16 @@ tests. Environment variables: `HYPERFEM_TUTORIALS_GROUP` (`basics`, `coupled`, `
 The solver tutorials use PETSc through GridapPETSc. The project pins `PETSc_jll` to 3.22.1, the version these tutorials are
 tested with (newer builds failed to load on macOS with GridapPETSc 0.5.8); with `HYPERFEM_TUTORIALS_PETSC=0` those
 parts are skipped.
+
+## Threads of the linear algebra
+
+Julia's OpenBLAS starts one thread per core by default. When several Julia processes run at the same time (for
+example several tutorials, or the test groups in parallel), the sparse LU factorisations compete for the cores and
+can become many times slower. Limit the BLAS threads in that case, e.g.
+
+```
+OPENBLAS_NUM_THREADS=4 julia -t 4 --project=. src/E13_Solvers.jl
+```
+
+The times written in the headers of the tutorials were measured with 4 Julia threads and 4 BLAS threads
+(Apple M5 Max).

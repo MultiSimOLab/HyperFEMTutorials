@@ -16,7 +16,22 @@ selected = filter(TUTORIALS) do t
   (group === :all || t.group === group) && (isempty(only_) || any(p -> startswith(t.file, p), only_))
 end
 
+# The list of tutorials, the scripts in src/, the README and the documentation index must agree
+@testset "list of tutorials" begin
+  srcdir = dirname(pathof(HyperFEMTutorials))
+  scripts = sort(filter(f -> occursin(r"^E\d\d_.*\.jl$", f), readdir(srcdir)))
+  @test sort([t.file for t in TUTORIALS]) == scripts
+  @test allunique(t.number for t in TUTORIALS) && allunique(t.file for t in TUTORIALS)
+  @test all(t -> startswith(t.file, "E" * lpad(t.number, 2, '0') * "_"), TUTORIALS)
+  @test all(t -> t.group in (:basics, :coupled, :contact, :fluids, :solvers, :dynamics), TUTORIALS)
+  readme = read(joinpath(srcdir, "..", "README.md"), String)
+  @test all(t -> occursin("src/$(t.file)", readme), TUTORIALS)
+  index = read(joinpath(srcdir, "..", "docs", "src", "index.md"), String)
+  @test all(t -> occursin("tutorials/$(splitext(t.file)[1]).md", index), TUTORIALS)
+end
+
 times = Tuple{String,Float64,Bool}[]
+isempty(selected) && error("no tutorial selected (HYPERFEM_TUTORIALS_GROUP = $group, HYPERFEM_TUTORIALS_ONLY = $(join(only_, ',')))")
 @testset "HyperFEMTutorials" begin
   for t in selected
     file = joinpath(dirname(pathof(HyperFEMTutorials)), t.file)

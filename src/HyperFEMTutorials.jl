@@ -30,6 +30,10 @@ const TUTORIALS = [
   (number=13, file="E13_Solvers.jl",                     title="Linear solvers for large problems",                  group=:solvers),
   (number=14, file="E14_Multigrid.jl",                   title="Geometric h- and p-multigrid",                       group=:solvers),
   (number=15, file="E15_Elastodynamics.jl",              title="Elastodynamics: free vibration of a cantilever",     group=:dynamics),
+  (number=16, file="E16_ViscoElectroMechanics.jl",       title="Visco-electro-mechanics: creep of a dielectric bimorph", group=:dynamics),
+  (number=17, file="E17_ThermoMechanics.jl",             title="Thermo-mechanics: transient heat conduction and thermal expansion", group=:coupled),
+  (number=18, file="E18_Explicit_wave_propagation.jl",   title="Explicit dynamics: wave propagation in a bar",        group=:dynamics),
+  (number=19, file="E19_Constitutive_models.jl",         title="Constitutive models: energies, stresses and tangents", group=:basics),
 ]
 
 "Absolute path of the script of tutorial `n` (its number) or of the tutorial whose file name starts with `n`."

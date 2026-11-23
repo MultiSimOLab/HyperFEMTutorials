@@ -1,0 +1,62 @@
+name: CI
+on:
+  push:
+    branches: [main]
+    tags: ['*']
+  pull_request:
+  schedule:
+    - cron: '17 3 * * 1'       # weekly, to catch changes of the dependencies
+  workflow_dispatch:
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ startsWith(github.ref, 'refs/pull/') }}
+jobs:
+  tutorials:
+    name: ${{ matrix.group }} - Julia ${{ matrix.version }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        version: ['1']
+        group: [basics, coupled, contact, fluids, solvers, dynamics]
+        include:
+          # the minimum supported Julia version, on the most common group
+          - version: '1.12'
+            group: basics
+    env:
+      HYPERFEM_TUTORIALS_GROUP: ${{ matrix.group }}
+      HYPERFEM_TUTORIALS_PETSC: '0'
+      JULIA_NUM_THREADS: '4'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: julia-actions/setup-julia@v2
+        with:
+          version: ${{ matrix.version }}
+      - uses: julia-actions/cache@v2
+      - uses: julia-actions/julia-buildpkg@v1
+      - uses: julia-actions/julia-runtest@v1
+        with:
+          coverage: false
+          check_bounds: auto
+  petsc:
+    # The PETSc parts of the solver tutorials; not blocking until the PETSc binaries have proved stable on CI.
+    name: solvers with PETSc - Julia 1
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    continue-on-error: true
+    env:
+      HYPERFEM_TUTORIALS_GROUP: solvers
+      HYPERFEM_TUTORIALS_PETSC: '1'
+      JULIA_NUM_THREADS: '4'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: julia-actions/setup-julia@v2
+        with:
+          version: '1'
+      - uses: julia-actions/cache@v2
+      - uses: julia-actions/julia-buildpkg@v1
+      - uses: julia-actions/julia-runtest@v1
+        with:
+          coverage: false
+          check_bounds: auto
