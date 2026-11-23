@@ -1,0 +1,195 @@
+# # Tutorial 08: Magneto-mechanical hMRE beam
+#
+# A slender beam of a hard-magnetic magnetorheological elastomer (hMRE: hard magnetic particles in an ultra-soft
+# silicone matrix) is magnetised along its length and clamped at one end. A transverse magnetic field exerts a
+# torque on the magnetisation, which tries to align with the field: the beam bends. This is the simplified model
+# of Perez-Garcia, Ortigosa, Martínez-Frutos and Garcia-Gonzalez (Adv. Mater. 2025): the applied field acts on the
+# solid only, and the field created by the beam itself and the surrounding air are ignored. Tutorial 09 solves the
+# same beam with the magnetic field in the surrounding vacuum.
+#
+# **What you will learn**
+# - two-dimensional (plane strain) models: `NonlinearMooneyRivlin2D + TransverseIsotropy2D`;
+# - a domain made of one subdomain of a larger mesh (`Triangulation(model, tags=...)`);
+# - a load written by hand and evaluated at the previous converged state: the state pair `xh`/`xh⁻` of
+#   `StaticNonlinearModel`;
+# - evaluating a finite element function at a point.
+#
+# Measured on a Mac M5 Max (Julia 1.13.0, 4 threads, 4 BLAS threads; HyperFEM 0.3.0, HyperFEMKernels 0.2.6,
+# Gridap 0.20.8; compiled backend), whole run including compilation:
+# 25 s (FAST and full are the same case), of which 5 s in `solve!` (20 increments, 137 Newton iterations);
+# 1 232 free dofs.
+#
+# ## Problem statement
+# The beam ``\Omega = (0, L)\times(-t/2, t/2)``, with ``L = 50`` mm and ``t = 2`` mm, is in plane strain. It is
+# clamped on the first 2.5 mm of its lower face and cannot move along ``x`` at its left end. Its residual
+# magnetisation has the direction ``\boldsymbol N = (1, 0)`` in the reference configuration and is carried by the
+# rotation ``\boldsymbol R = \boldsymbol F\boldsymbol U^{-1}`` of the polar decomposition (``\boldsymbol U^2 =
+# \boldsymbol F^T\boldsymbol F``). The applied field ``\boldsymbol B_a = \Lambda\,(0, -B_a)`` is uniform and grows
+# with the load factor ``\Lambda``. The magnetic (Zeeman) energy and its stress, with ``\boldsymbol U^{-1}`` taken as
+# fixed when differentiating, are
+# ```math
+# \Psi_{\mathrm{mag}} = -\frac{\alpha_r}{\mu_0}\, \boldsymbol B_a \cdot \boldsymbol R \boldsymbol N ,
+# \qquad
+# \boldsymbol P_{\mathrm{mag}} = -\frac{\alpha_r}{\mu_0}\, \boldsymbol B_a \otimes \boldsymbol U^{-1}\boldsymbol N ,
+# ```
+# with ``\mu_0 = 4\pi\cdot 10^{-7}`` H/m, the remanent magnetisation ``\alpha_r = 10^{-2}/\mu_0 \approx 7.96`` kA/m
+# (10 mT divided by ``\mu_0``) and ``B_a = 8\cdot 10^{-8}``, the values of the paper's script. In that script, and
+# here, ``B_a`` is ``\mu_0`` times the applied flux density: the applied field is ``B_a/\mu_0 \approx 64`` mT, the
+# energy is the usual ``-\boldsymbol M\cdot\boldsymbol B`` with ``\boldsymbol M = \alpha_r \boldsymbol R\boldsymbol N``, and the
+# magnetic stress scale ``\alpha_r B_a/\mu_0`` is about 0.5 kPa. The matrix is an ultra-soft
+# silicone with a slight residual anisotropy along ``\boldsymbol N``, fitted in the paper: the sum of a nonlinear
+# Mooney–Rivlin energy and a transversely isotropic one (in Pa),
+# ```math
+# \begin{aligned}
+# \Psi_{\mathrm{MR}} &= \frac{\mu_1}{2\alpha_1 3^{\alpha_1-1}}(\boldsymbol F:\boldsymbol F + 1)^{\alpha_1}
+#   + \frac{\mu_2}{2\alpha_2 3^{\alpha_2-1}}(\boldsymbol F:\boldsymbol F + J^2)^{\alpha_2}
+#   - (\mu_1 + 2\mu_2)\ln J + \frac{\lambda}{2}(J-1)^2 + \text{const}, \\
+# \Psi_{\mathrm{TI}} &= \frac{\mu}{2\beta_1}(I_4^{\beta_1} - 1) + \frac{\mu}{2\beta_2}(I_5^{\beta_2} - 1) - \mu\ln J ,
+# \qquad I_4 = |\boldsymbol F\boldsymbol N|^2 ,\; I_5 = |\boldsymbol H\boldsymbol N|^2 ,
+# \end{aligned}
+# ```
+# (in the 2D models ``\boldsymbol F:\boldsymbol F + 1`` and ``\boldsymbol F:\boldsymbol F + J^2`` are the first two
+# invariants of the plane-strain deformation). The weak form is
+# ```math
+# \int_\Omega \nabla_0\boldsymbol v : \left(\partial_{\boldsymbol F}\Psi_{\mathrm{MR}} + \partial_{\boldsymbol F}\Psi_{\mathrm{TI}}
+#   + \boldsymbol P_{\mathrm{mag}}\right) \mathrm dA = 0 \quad \forall \boldsymbol v .
+# ```
+# The magnetic stress is evaluated at the displacement of the previous converged increment, ``\boldsymbol u^{-}``,
+# so that within an increment it is a given load and the tangent is that of the elastic energy alone. This
+# explicit treatment of the rotation makes the result depend (slightly) on the size of the increments.
+#
+# ## Setup
+using HyperFEM
+using Gridap
+using HyperFEMKernels                                          # compiled backend (`backend=:compiled`)
+using LinearAlgebra: norm
+
+const FAST = get(ENV, "HYPERFEM_TUTORIALS_FAST", "0") == "1"   # the test suite runs the same case (see *Solve*)
+outdir = joinpath(@__DIR__, "..", "data", "sims", "E08_MagnetoMechanical_beam")
+setupfolder(outdir)                                            # VTK output (not versioned)
+
+# ## Geometry and mesh
+# The mesh of the paper: the beam, a region below it meant for a permanent magnet in other variants of the problem,
+# and the surrounding air, in linear triangles. Here only the beam (physical group `Beam`) is used; tutorial 09 uses
+# the rest, all of it as vacuum.
+model = GmshDiscreteModel(joinpath(@__DIR__, "..", "data", "models", "Short_magnet.msh"))
+L = 0.05                                                       # m
+
+# ## Constitutive model
+# Parameters fitted in the paper (Pa); `+` composes the isotropic and the anisotropic models.
+params = [10.0, 12480.64495232286, 1.0, 2.0, 5195.545287237134, 0.2602717127043121, 2.0]
+modelmech = NonlinearMooneyRivlin2D(λ=(params[1] + params[2]) * 1e2, μ1=params[1] * 1e3, μ2=params[2],
+                                    α1=params[3], α2=params[4]) +
+            TransverseIsotropy2D(μ=params[5], α1=params[6], α2=params[7])
+km = Kinematics(Mechano, Solid)
+F, _, _ = get_Kinematics(km)
+
+# Magnetic constants. They are read inside `Pmag` below, a function evaluated at every quadrature point, so they
+# are declared `const`: a non-constant global read there would make every evaluation dynamic (and slow).
+const μ0 = 4π * 1e-7                                           # H/m
+const αr = 10e-3 / μ0                                          # A/m, remanent magnetisation
+Banorm = 80.0e-9                                               # μ0 × applied flux density: Banorm/μ0 ≈ 64 mT
+
+# ## Boundary conditions
+# `Fixed_Solid` (the clamped part of the lower face) in both components; `Fixed_Solid_x` (the left end) along
+# ``x`` only.
+Du = BoundaryConditions(
+  BoundaryCondition("Fixed_Solid", [0.0, 0.0]),
+  BoundaryCondition("Fixed_Solid_x", [0.0, 0.0]; mask=(true, false)))
+
+# ## Finite element spaces
+# Spaces on the beam only. Two FE functions hold the current state ``\boldsymbol u`` and the state of the
+# previous converged increment ``\boldsymbol u^{-}``; the computational model updates both (`xh`, `xh⁻`).
+order = 1
+reffeu = ReferenceFE(lagrangian, VectorValue{2,Float64}, order)
+Ω = Triangulation(model, tags=["Beam"])
+dΩ = Measure(Ω, 2 * order)
+V = TestFESpace(Ω, reffeu, Du, conformity=:H1)
+U = TrialFESpace(V, Du)
+U⁻ = TrialFESpace(V, Du)
+uh = FEFunction(U, zeros(num_free_dofs(U)))
+uh⁻ = FEFunction(U⁻, zeros(num_free_dofs(U⁻)))
+println("free dofs: ", num_free_dofs(U), "   triangles: ", num_cells(Ω))
+
+# Magnetisation direction and applied field, as finite element fields on the beam.
+VN = TestFESpace(Ω, reffeu)
+Nh = interpolate_everywhere(x -> VectorValue(1.0, 0.0), VN)
+Bah = interpolate_everywhere(VectorValue(0.0, -Banorm), VN)
+
+# ## Weak form
+# ``\boldsymbol U^{-1} = (\boldsymbol F^T\boldsymbol F)^{-1/2}`` at a point, with a small shift that keeps the
+# square root well defined, and the magnetic stress. They are plain Julia functions of tensors, composed with FE
+# fields like the derivatives of the constitutive models.
+function invU(F; ε=1e-12)
+  S = get_array(F)' * get_array(F) + ε * get_array(I2D)
+  TensorValue(inv(sqrt(S)))
+end
+Pmag(F, N, Ba) = (-αr / μ0) * (Ba ⊗ (invU(F) * N))
+
+# The elastic terms come from the helpers (`Nh` is the extra argument of the anisotropic model); the magnetic
+# term is written by hand, with ``\boldsymbol F`` of `uh⁻` and multiplied by the load factor. It does not depend on
+# the unknown ``\boldsymbol u``, so it does not enter the tangent.
+res(Λ) = (u, v) -> residual(modelmech, km, u, v, dΩ, Λ, Nh) +
+                   Λ * ∫((Pmag ∘ (F ∘ ∇(uh⁻)', Nh, Bah)) ⊙ ∇(v)')dΩ
+jac(Λ) = (u, du, v) -> jacobian(modelmech, km, u, du, v, dΩ, Λ, Nh)
+
+# ## Solver and computational model
+# The paper's script stops Newton at a 1 % relative residual (`rtol=1e-2`), on the grounds that the magnetic load
+# is lagged by one increment anyway. Here every increment is solved to equilibrium (`rtol=1e-8`): the result then
+# depends on the increments only, not on where the iterations happened to stop. With `backend=:compiled` (tutorial 01) the hand-written magnetic term, `invU`
+# included, is compiled with the rest of the form; at every increment it is only rebound to the new `uh⁻` and ``\Lambda``.
+nls = NewtonRaphson(LUSolver(); maxiter=20, atol=1e-10, rtol=1e-8, verbose=true)
+comp_model = StaticNonlinearModel(res, jac, U, V, Du; nls=nls, xh=uh, xh⁻=uh⁻, backend=:compiled)
+
+# ## Post-processing
+# After every increment: the displacement of the middle of the free end, ``(L, 0)``, and the VTK files.
+tip = Point(L, 0.0)
+field, tip_u = Float64[], VectorValue{2,Float64}[]
+function record(post)
+  Λ = post.Λ[post.iter]
+  push!(field, Λ * Banorm / μ0)                                # applied flux density, T
+  push!(tip_u, uh(tip))
+  pvd = get_pvd(post)
+  pvd[Λ] = createvtk(Ω, joinpath(outdir, "step_$(post.iter).vtu"), cellfields=["u" => uh])
+end
+post = PostProcessor(comp_model, record; is_vtk=true, filepath=outdir)
+
+# ## Solve
+# Twenty equal increments, as in the paper; one bisection at most. The beam is so soft that the first
+# increments need many Newton iterations, and with five increments the first one diverges. The whole run takes
+# seconds, so the FAST mode of the test suite runs this same case.
+x, flag = solve!(comp_model; stepping=LoadStepping(nsteps=20, maxbisec=1), post=post)
+
+for (b, w) in zip(field, tip_u)
+  println("B = $(round(1e3b, sigdigits=4)) mT   tip displacement = ($(round(w[1]*1e3, sigdigits=6)), $(round(w[2]*1e3, sigdigits=6))) mm")
+end
+
+# ## Checks
+# **Physics.** The beam bends towards the field (``-y``), more at every increment, and its free end stays at a
+# distance from the clamp no larger than the length of the beam (a soft but not extensible bending).
+tip_end = tip_u[end]
+println("tip displacement: ", tip_end, "   ‖u‖ = ", norm(get_free_dof_values(uh)))
+@assert flag == 1 "the load stepping did not reach Λ = 1"
+@assert all(diff([w[2] for w in tip_u]) .< 0) && tip_end[2] < 0 "the beam does not bend towards the field"
+@assert norm(VectorValue(L, 0.0) + tip_end) < 1.02 * L "the free end moved too far"
+
+# **Reference.** The norm of the displacement against the script of the paper,
+# `Adv_Mater_Ultra_Soft_Magnet/src/hMRE_2D.jl` (HyperFEM 0.3.0, Gridap 0.20.8, Julia 1.13.0, macOS arm64), which
+# stops Newton at a 1 % relative residual: the two agree to 4e-8, so the paper's looser tolerance did not change its
+# result. The tip displacement is a regression value of this script (same versions, HyperFEMKernels 0.2.6).
+nu = norm(get_free_dof_values(uh))
+nu_ref = 0.7146295685790958                                    # m, paper's script
+@assert isapprox(nu, nu_ref; rtol=1e-6) "‖u‖ = $nu differs from the reference $nu_ref"
+tip_ref = [-0.034300973255553015, -0.04289853199660556]        # m
+@assert isapprox(collect(Tuple(tip_end)), tip_ref; rtol=1e-5) "tip displacement $tip_end differs from the reference $tip_ref"
+
+# ## Going further
+# - Run with `LoadStepping(nsteps=40, maxbisec=1)`: the change of the tip displacement measures the error of the
+#   lagged magnetic load.
+# - Reverse the field, or turn it: ``\boldsymbol B_a`` along ``\boldsymbol N`` exerts no torque, and the beam only
+#   stretches or shortens along its axis.
+# - Tutorial 09 computes the magnetic field in the beam and in the surrounding vacuum, driven by a magnetic
+#   potential difference across the box, and solves magnetics and mechanics one after the other (`StaggeredModel`).
+# - Reference: C. Perez-Garcia, R. Ortigosa, J. Martínez-Frutos, D. Garcia-Gonzalez, *Topology and material
+#   optimization in ultra-soft magnetoactive structures: making advantage of residual anisotropies*, Adv. Mater.
+#   (2025) e18489, [doi:10.1002/adma.202518489](https://doi.org/10.1002/adma.202518489).

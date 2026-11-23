@@ -1,0 +1,240 @@
+# # Tutorial 14: Geometric h- and p-multigrid
+#
+# Algebraic multigrid (tutorial 13) guesses the coarse levels from the matrix. When the mesh comes from refining a
+# coarse one, the coarse levels are known exactly: geometric multigrid uses them and its Krylov iterations stay
+# constant however fine the mesh, so the cost per Newton iteration grows only linearly with the number of unknowns.
+# The same idea across polynomial degrees (p-multigrid) preconditions high-order elements whose tangent is never
+# assembled.
+#
+# **What you will learn**
+# - building a hierarchy of uniformly refined meshes: `MeshHierarchy`, `fine_model`, `level_model`;
+# - `HMultigridSolver`: CG preconditioned by a geometric V-cycle, with lagged rebuilds (`reuse`) and an inexact Newton;
+# - checking grid independence: the Krylov iterations do not grow with the number of levels;
+# - p-multigrid for Q2 elements with a matrix-free tangent: `level_spaces`, HyperFEMKernels' `PMultigrid` inside a
+#   `MatrixFreeSolver`, with `backend = CompiledBackend(jacobian = :matrixfree)`.
+#
+# Measured on a Mac M5 Max (Julia 1.13.0, 4 Julia threads, 4 BLAS threads; HyperFEM 0.3.0, HyperFEMKernels 0.2.6,
+# Gridap 0.20.8): FAST (levels 2–4, up to 9 477 dofs; Q2 with 675 dofs) 48 s with compilation; full run
+# (levels 3–5, up to 68 493 dofs; Q2 with 9 477 dofs) 82 s. Setup + linear solve per Newton iteration at
+# 68 493 dofs: LU 2.2 s, CG + hMG 0.10 s, CG + hMG with `reuse = 3` and the inexact Newton 0.04 s, CG + AMG
+# 1.06 s; Q2 with 9 477 dofs: GMRES + p-multigrid on the matrix-free tangent 0.069 s, LU 0.077 s.
+#
+# ## Problem statement
+# The bar of tutorial 13: neo-Hookean (``\lambda = 10``, ``\mu = 1``) ``\Omega = (0,1)\times(0,0.2)\times(0,0.2)``,
+# clamped at ``x = 0``, the face ``x = 1`` moved by ``u_z = 0.05\,\Lambda`` in two load increments. The coarse mesh
+# has ``5\times1\times1`` hexahedra; level ``\ell`` of the hierarchy is that mesh refined ``\ell - 1`` times (every
+# hexahedron split into 8), so level 5 has ``80\times16\times16`` cells and 68 493 free dofs with Q1 elements.
+#
+# One V-cycle on the fine tangent ``\boldsymbol K_L``: a few Chebyshev smoothing steps (on the ``3\times3`` nodal
+# blocks), restriction of the residual to the next coarser level with ``\boldsymbol P^T``, the same cycle there on the
+# Galerkin operator ``\boldsymbol K_{\ell-1} = \boldsymbol P^T \boldsymbol K_\ell \boldsymbol P``, prolongation of the
+# correction with ``\boldsymbol P`` (the exact interpolation between the nested Q1 spaces) and smoothing again; the
+# coarsest level is solved by any linear solver (LU here). The cycle is symmetric, so it preconditions CG.
+#
+# ## Setup
+using HyperFEM
+using Gridap
+using HyperFEMKernels                          # compiled assembly; `MatrixFreeSolver`, `PMultigrid`
+using LinearAlgebra, Printf
+import AlgebraicMultigrid                      # activates `AMGSolver` (for the comparison)
+
+const FAST = get(ENV, "HYPERFEM_TUTORIALS_FAST", "0") == "1"    # reduced case for the test suite
+outdir = joinpath(@__DIR__, "..", "data", "sims", "E14_Multigrid")
+setupfolder(outdir)                                             # VTK output (not versioned)
+
+# ## Mesh hierarchy and problem
+# `MeshHierarchy(coarse, L)` refines the coarse model ``L - 1`` times; the simulation runs on `fine_model(h)`, and
+# the multigrid solver builds the same finite element space on every `level_model(h, ℓ)`. That is why the space is
+# given as a function of the model, `space(m)`. The Dirichlet tags must be closed sets (a face with its edges and
+# vertices: the `⁺` tags), so that every level has the same Dirichlet boundary; refined models inherit the tags.
+function hmg_problem(nlevels)
+  coarse = CartesianDiscreteModel((0, 1, 0, 0.2, 0, 0.2), (5, 1, 1))
+  labels = get_face_labeling(coarse)
+  add_tag_from_tags!(labels, "fixed", CartesianTags.face0YZ⁺)
+  add_tag_from_tags!(labels, "moved", CartesianTags.face1YZ⁺)
+  h = MeshHierarchy(coarse, nlevels)
+  model = fine_model(h)
+  physmodel = NeoHookean3D(λ=10.0, μ=1.0)
+  kinematics = Kinematics(Mechano, Solid)
+  Ω = Triangulation(model)
+  dΩ = Measure(Ω, 2)
+  D = BoundaryConditions(BoundaryCondition("fixed", [0.0, 0.0, 0.0]),
+                         BoundaryCondition("moved", [0.0, 0.0, 0.05], EvolutionFunctions.ramp()))
+  space(m) = TestFESpace(Triangulation(m), ReferenceFE(lagrangian, VectorValue{3,Float64}, 1), D, conformity=:H1)
+  V = space(model)
+  U = TrialFESpace(V, D, 0.0)
+  res(Λ) = (u, v) -> residual(physmodel, kinematics, u, v, dΩ)
+  jac(Λ) = (u, du, v) -> jacobian(physmodel, kinematics, u, du, v, dΩ)
+  (; res, jac, U, V, D, h, space, Ω)
+end
+
+# `solve_with` is a variant of the function of tutorial 13, with the backend as an argument: the whole simulation (two
+# increments, Dirichlet projection) with the linear solver `ls`, assembled by the compiled kernels of HyperFEMKernels
+# (`backend`), and the counters of the run.
+function solve_with(ls, p; forcing=nothing, backend=:compiled)
+  nls = NewtonRaphson(ls; maxiter=20, atol=1e-14, rtol=1e-10, forcing)
+  m = StaticNonlinearModel(p.res, p.jac, p.U, p.V, p.D; nls, backend)
+  t = @elapsed ((x, flag) = solve!(m; stepping=LoadStepping(nsteps=2, maxbisec=0), ProjectDirichlet=true))
+  log = nls.log
+  (; x=copy(x), ok=(flag == 1), newton=log.niters, krylov=log.nlinear, lin=collect(linear_history(nls)),
+     builds=preconditioner_builds(m.caches.nls_cache.ns), t, t_solve=(log.t_setup + log.t_linear) / log.niters, model=m)
+end
+
+# ## The solvers
+# - `HMultigridSolver(h, space; krylov = :cg)`: CG with one V-cycle per iteration, coarsest level by LU (the
+#   `coarse` keyword takes any linear solver, e.g. `AMGSolver(:cg; nullspace = near_nullspace(Uc))` or PETSc's GAMG).
+# - the same with `reuse = 3` and `forcing = EisenstatWalker()`: the coarse levels are rebuilt every three Newton
+#   iterations (the fine smoother always follows the current tangent) and the linear tolerance follows the Newton
+#   residual. The configuration HyperFEM recommends for production.
+# - CG + AMG with the rigid-body modes (tutorial 13), for comparison.
+hmg_solvers = [
+  ("LU", p -> LUSolver(), nothing),
+  ("CG + hMG", p -> HMultigridSolver(p.h, p.space; krylov=:cg, rtol=1e-10, maxiter=200), nothing),
+  ("CG + hMG, reuse = 3, inexact", p -> HMultigridSolver(p.h, p.space; krylov=:cg, rtol=1e-10, maxiter=200, reuse=3), EisenstatWalker()),
+  ("CG + AMG, rigid modes", p -> AMGSolver(:cg; rtol=1e-10, maxiter=1000, nullspace=near_nullspace(p.U)), nothing),
+]
+
+# ## Solve on 3 levels of refinement
+# Every solver is first run on a two-level hierarchy (compilation), then on three hierarchies.
+levels = FAST ? (2, 3, 4) : (3, 4, 5)
+for (name, make, forcing) in hmg_solvers
+  pw = hmg_problem(2)
+  solve_with(make(pw), pw; forcing)
+end
+hmg = Dict{Tuple{String,Int},Any}()
+ndofs = Dict{Int,Int}()
+for L in levels
+  p = hmg_problem(L)
+  ndofs[L] = num_free_dofs(p.U)
+  for (name, make, forcing) in hmg_solvers
+    hmg[(name, L)] = solve_with(make(p), p; forcing)
+  end
+  L == last(levels) && writevtk(p.Ω, joinpath(outdir, "bar_L$L"), cellfields=["u" => get_state(hmg[("LU", L)].model)])
+end
+
+# ## Results
+# Newton iterations, Krylov iterations per Newton iteration, time of the run, time of setup + linear solve per Newton
+# iteration ("solve/it") and difference from LU.
+@printf("  %6s %7s  %-30s %6s %7s %8s %9s %9s\n", "levels", "dofs", "solver", "Newton", "per it", "run (s)", "solve/it", "vs LU")
+for L in levels, (name, _, _) in hmg_solvers
+  r = hmg[(name, L)]
+  err = norm(r.x - hmg[("LU", L)].x) / norm(hmg[("LU", L)].x)
+  @printf("  %6d %7d  %-30s %6d %7.1f %8.2f %9.3f %9.1e\n", L, ndofs[L], name, r.newton, r.krylov / r.newton, r.t, r.t_solve, err)
+end
+# A measured example (full run, Mac M5 Max, 4 Julia threads, 4 BLAS threads; the iterations are reproducible, the
+# times depend on the machine):
+# ```
+#   levels    dofs  solver                         Newton  per it  run (s)  solve/it     vs LU
+#        3    1425  LU                                  6     0.0     0.23     0.006   0.0e+00
+#        3    1425  CG + hMG                            6    15.5     0.66     0.011   2.3e-16
+#        3    1425  CG + hMG, reuse = 3, inexact        6     5.7     0.33     0.004   2.5e-13
+#        3    1425  CG + AMG, rigid modes               6    22.7     0.11     0.012   2.2e-16
+#        4    9477  LU                                  6     0.0     0.62     0.061   0.0e+00
+#        4    9477  CG + hMG                            6    17.2     0.95     0.024   1.2e-16
+#        4    9477  CG + hMG, reuse = 3, inexact        6     6.2     0.50     0.009   2.3e-13
+#        4    9477  CG + AMG, rigid modes               6    28.2     0.95     0.109   1.3e-16
+#        5   68493  LU                                  6     0.0    17.90     2.172   0.0e+00
+#        5   68493  CG + hMG                            6    17.8     2.20     0.104   8.5e-17
+#        5   68493  CG + hMG, reuse = 3, inexact        6     6.7     1.31     0.041   9.6e-14
+#        5   68493  CG + AMG, rigid modes               6    33.8     8.96     1.062   9.6e-17
+# ```
+# The CG iterations of geometric multigrid stay nearly constant from level to level (15.5, 17.2, 17.8); those of AMG
+# grow (22.7, 28.2, 33.8). Each refinement multiplies the dofs by about 7: the time per Newton iteration of hMG grows
+# by less than that (2.2 and 4.3 times), that of LU by 10 and then 35 times. With 1 425 dofs LU is the fastest;
+# with 68 000, CG + hMG is 20 times faster than LU per Newton iteration, and 50 times with `reuse = 3` and the
+# inexact Newton. The run times also include the two Dirichlet projections (one per increment) and the assembly.
+# hMG and the compiled assembly run on Julia's threads, AlgebraicMultigrid's `AMGSolver` in serial: part of the gap
+# between them is threads against serial code; the iteration counts are not.
+
+# ## p-multigrid with a matrix-free tangent
+# For Q2 (and higher) hexahedra the tangent need not be assembled: HyperFEMKernels applies it matrix-free with sum
+# factorisation, at the cost of a sparse product or less and a fraction of its memory. `PMultigrid` preconditions
+# it with a V-cycle across polynomial degrees on the same mesh: Chebyshev smoothing on the matrix-free Q2 tangent,
+# transfer to the Q1 space, where the tangent is rediscretised at the interpolated state, assembled and solved
+# (`coarse`). `level_spaces(U, V, D)` builds the Q1 space with the same boundary conditions.
+# `CompiledBackend(jacobian = :matrixfree)` makes the Newton hand the linear solver the matrix-free operator;
+# `MatrixFreeSolver` runs GMRES (Krylov.jl) on it.
+function q2_problem(cells)
+  model = CartesianDiscreteModel((0, 1, 0, 0.2, 0, 0.2), cells)
+  labels = get_face_labeling(model)
+  add_tag_from_tags!(labels, "fixed", CartesianTags.face0YZ⁺)
+  add_tag_from_tags!(labels, "moved", CartesianTags.face1YZ⁺)
+  physmodel = NeoHookean3D(λ=10.0, μ=1.0)
+  kinematics = Kinematics(Mechano, Solid)
+  Ω = Triangulation(model)
+  dΩ = Measure(Ω, 4)
+  D = BoundaryConditions(BoundaryCondition("fixed", [0.0, 0.0, 0.0]),
+                         BoundaryCondition("moved", [0.0, 0.0, 0.05], EvolutionFunctions.ramp()))
+  V = TestFESpace(Ω, ReferenceFE(lagrangian, VectorValue{3,Float64}, 2), D, conformity=:H1)
+  U = TrialFESpace(V, D, 0.0)
+  res(Λ) = (u, v) -> residual(physmodel, kinematics, u, v, dΩ)
+  jac(Λ) = (u, du, v) -> jacobian(physmodel, kinematics, u, du, v, dΩ)
+  (; res, jac, U, V, D, Ω)
+end
+
+function pmg_solver(p)
+  spaces = level_spaces(p.U, p.V, p.D)            # [(U, V) in Q2, (U1, V1) in Q1]
+  MatrixFreeSolver(; krylov=:gmres, rtol=1e-10, maxiter=200, preconditioner=PMultigrid(spaces; coarse=LUSolver()))
+end
+const MATRIXFREE = CompiledBackend(jacobian=:matrixfree)
+
+q2_cells = FAST ? (5, 2, 2) : (20, 4, 4)
+let pw = q2_problem((5, 1, 1))                   # compilation
+  solve_with(LUSolver(), pw)
+  solve_with(pmg_solver(pw), pw; backend=MATRIXFREE)
+end
+pq = q2_problem(q2_cells)
+ndofs_q2 = num_free_dofs(pq.U)
+q2_lu = solve_with(LUSolver(), pq)
+q2_pmg = solve_with(pmg_solver(pq), pq; backend=MATRIXFREE)
+ws = HyperFEMKernels.work_summary(q2_pmg.model.caches.op)
+println("Q2 bar, $(join(q2_cells, "×")) cells, $ndofs_q2 dofs")
+@printf("  LU (assembled):          Newton %d, run %.2f s, setup + solve per Newton iteration %.3f s\n", q2_lu.newton, q2_lu.t, q2_lu.t_solve)
+@printf("  GMRES + p-MG (matrix-free): Newton %d, GMRES per Newton iteration %s, run %.2f s, %.3f s per iteration, vs LU %.1e\n",
+        q2_pmg.newton, string(q2_pmg.lin), q2_pmg.t, q2_pmg.t_solve, norm(q2_pmg.x - q2_lu.x) / norm(q2_lu.x))
+println("  matrix-free operator: jacobian = $(ws.jacobian), pattern built: $(ws.nnz ≥ 0), groups ",
+        [(g.kind, g.path) for g in ws.groups], ", Gridap fallbacks $(ws.fallback_residual + ws.fallback_jacobian)")
+# On a mesh this small p-multigrid is about as fast as LU; it is shown as a working configuration (the same Newton
+# trajectory as LU, bounded GMRES iterations). HyperFEMKernels' README reports its scaling on larger problems.
+
+# ## Checks
+# (b) Every multigrid run reaches the LU solution, and the solvers with exact linear solves follow the Newton
+# trajectory of LU. Grid independence: the CG iterations per Newton iteration of hMG grow by at most 50 % over the
+# three hierarchies (the criterion of HyperFEM's test suite), and stay below 30.
+for L in levels, (name, _, _) in hmg_solvers
+  r, ref = hmg[(name, L)], hmg[("LU", L)]
+  @assert r.ok "$name, $L levels: the load stepping did not reach Λ = 1"
+  @assert norm(r.x - ref.x) ≤ 1e-6 * norm(ref.x) "$name, $L levels: solution away from LU"
+  occursin("inexact", name) || @assert r.newton == ref.newton "$name, $L levels: Newton iterations differ from LU"
+end
+its_hmg = [hmg[("CG + hMG", L)].krylov / hmg[("CG + hMG", L)].newton for L in levels]
+println("CG + hMG iterations per Newton iteration on $(levels) levels: ", round.(its_hmg, digits=1))
+@assert maximum(its_hmg) ≤ 1.5 * minimum(its_hmg) "hMG iterations grow with the refinement"
+@assert maximum(its_hmg) ≤ 30 "hMG iterations above 30"
+@assert hmg[("CG + hMG, reuse = 3, inexact", last(levels))].builds < hmg[("CG + hMG", last(levels))].builds "reuse did not reduce the builds"
+@assert q2_pmg.ok && q2_lu.ok "Q2: the load stepping did not reach Λ = 1"
+@assert q2_pmg.newton == q2_lu.newton "p-MG: Newton iterations differ from LU"
+@assert norm(q2_pmg.x - q2_lu.x) ≤ 1e-6 * norm(q2_lu.x) "p-MG: solution away from LU"
+@assert all(≤(40), q2_pmg.lin) "p-MG: more than 40 GMRES iterations in a Newton iteration"
+@assert ws.jacobian === :matrixfree "the p-MG run assembled the tangent"
+# (c) Regression values of the LU solutions (HyperFEM 0.3.0, HyperFEMKernels 0.2.6, Gridap 0.20.8, Julia 1.13.0,
+# macOS arm64). The finest Q1 mesh of the full run is the bar of tutorial 13: the same value.
+xref_hmg, xref_q2 = FAST ? (1.7082045249535511, 0.4520311508708429) : (4.59603534564497, 1.707304750168487)
+println("‖x‖ Q1 finest = $(norm(hmg[("LU", last(levels))].x)), ‖x‖ Q2 = $(norm(q2_lu.x))")
+@assert isapprox(norm(hmg[("LU", last(levels))].x), xref_hmg; rtol=1e-5) "Q1: regression value"
+@assert isapprox(norm(q2_lu.x), xref_q2; rtol=1e-5) "Q2: regression value"
+
+# ## Going further
+# - Multi-field problems: `FieldSplitSolver` applies one V-cycle per field of a saddle point, e.g. for the
+#   electro-mechanical box of tutorial 13 on a hierarchy,
+#   `FieldSplitSolver(U, (HMultigridSolver(h, space_u; krylov=:cg, reuse=3), HMultigridSolver(h, space_φ; krylov=:cg, reuse=3)); split=:schur)`,
+#   with `forcing = EisenstatWalker()` in the Newton.
+# - The coarsest level of `HMultigridSolver` with PETSc's algebraic multigrid:
+#   `coarse = PETScSolver(:preonly, :gamg; nullspace = near_nullspace(Uc), blocksize = 3)` with
+#   `Uc = TrialFESpace(space(level_model(h, 1)))` (`using GridapPETSc`).
+# - `PMultigrid(spaces; coarse = AMGSolver(:cg; nullspace = near_nullspace(spaces[2][1])), coarse_every = 3)`
+#   replaces the coarse LU by AMG and rebuilds it every three updates; `level_spaces(U, V, D, (2, 1))` gives three
+#   levels for Q3 elements.
+# - `HyperFEMKernels.LaggedAssembled(solver; every = k)` is another preconditioner slot of `MatrixFreeSolver`: an
+#   assembled tangent factorised every `k` Newton iterations, applied to the exact matrix-free tangent.
+# - Reference: Trottenberg, Oosterlee and Schüller, *Multigrid*, Academic Press (2001).

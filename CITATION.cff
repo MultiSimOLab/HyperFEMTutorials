@@ -1,0 +1,37 @@
+cff-version: 1.2.0
+message: "If you use HyperFEM or these tutorials, please cite the article below and Gridap."
+title: "HyperFEMTutorials.jl: tutorials of HyperFEM.jl"
+authors:
+  - name: MultiSimOLab
+repository-code: "https://github.com/MultiSimOLab/HyperFEMTutorials.jl"
+license: MIT
+preferred-citation:
+  type: article
+  title: "Topology and material optimization in ultra-soft magnetoactive structures: making advantage of residual anisotropies"
+  authors:
+    - family-names: Perez-Garcia
+      given-names: C.
+    - family-names: Ortigosa
+      given-names: R.
+    - family-names: Martínez-Frutos
+      given-names: J.
+    - family-names: Garcia-Gonzalez
+      given-names: D.
+  journal: "Advanced Materials"
+  year: 2025
+  start: "e18489"
+  doi: "10.1002/adma.202518489"
+references:
+  - type: article
+    title: "Gridap: An extensible Finite Element toolbox in Julia"
+    authors:
+      - family-names: Badia
+        given-names: Santiago
+      - family-names: Verdugo
+        given-names: Francesc
+    journal: "Journal of Open Source Software"
+    year: 2020
+    volume: 5
+    issue: 52
+    start: 2520
+    doi: "10.21105/joss.02520"
