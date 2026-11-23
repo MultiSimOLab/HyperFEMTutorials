@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><meta name="referrer" content="no-referrer"/><title>12 · Pulsatile blood flow in a patient aorta · HyperFEM tutorials</title><meta name="title" content="12 · Pulsatile blood flow in a patient aorta · HyperFEM tutorials"/><meta property="og:title" content="12 · Pulsatile blood flow in a patient aorta · HyperFEM tutorials"/><meta property="twitter:title" content="12 · Pulsatile blood flow in a patient aorta · HyperFEM tutorials"/><meta name="description" content="Documentation for HyperFEM tutorials."/><meta property="og:description" content="Documentation for HyperFEM tutorials."/><meta property="twitter:description" content="Documentation for HyperFEM tutorials."/><meta property="og:url" content="https://multisimolab.github.io/HyperFEMTutorials.jl/dev/tutorials/E12_Aorta_blood_flow/"/><meta property="twitter:url" content="https://multisimolab.github.io/HyperFEMTutorials.jl/dev/tutorials/E12_Aorta_blood_flow/"/><link rel="canonical" href="https://multisimolab.github.io/HyperFEMTutorials.jl/dev/tutorials/E12_Aorta_blood_flow/"/><script data-outdated-warner src="../../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.63.2/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../search_index.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-mocha.css" data-theme-name="catppuccin-mocha"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-macchiato.css" data-theme-name="catppuccin-macchiato"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-frappe.css" data-theme-name="catppuccin-frappe"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-latte.css" data-theme-name="catppuccin-latte"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../../">HyperFEM tutorials</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="../../">Home</a></li><li><span class="tocitem">Basics</span><ul><li><a class="tocitem" href="../E01_Poisson/">01 · Poisson equation</a></li><li><a class="tocitem" href="../E02_Hyperelastic_stretch/">02 · Uniaxial stretch of a hyperelastic bar</a></li><li><a class="tocitem" href="../E03_Fibre_reinforced_cylinder/">03 · Fibre-reinforced cylinder under internal pressure</a></li><li><a class="tocitem" href="../E19_Constitutive_models/">19 · Constitutive models: energies, stresses and tangents</a></li></ul></li><li><span class="tocitem">Coupled problems</span><ul><li><a class="tocitem" href="../E04_ElectroMechanics/">04 · Electro-mechanics of a dielectric elastomer</a></li><li><a class="tocitem" href="../E05_ElectroMechanics_anisotropic/">05 · Anisotropic electro-mechanics</a></li><li><a class="tocitem" href="../E08_MagnetoMechanical_beam/">08 · Magneto-mechanical hMRE beam</a></li><li><a class="tocitem" href="../E09_hMRE_vacuum_staggered/">09 · hMRE beam in vacuum: staggered solution</a></li><li><a class="tocitem" href="../E17_ThermoMechanics/">17 · Thermo-mechanics: transient heat conduction and thermal expansion</a></li></ul></li><li><span class="tocitem">Contact</span><ul><li><a class="tocitem" href="../E06_ThirdMedium_contact/">06 · Third-medium contact</a></li></ul></li><li><span class="tocitem">Optimisation</span><ul><li><a class="tocitem" href="../../E07_Topology_optimization/">07 · Topology optimisation (in preparation)</a></li></ul></li><li><span class="tocitem">Fluids</span><ul><li><a class="tocitem" href="../E10_Stokes/">10 · Stokes flow around a cylinder</a></li><li><a class="tocitem" href="../E11_NavierStokes_transient/">11 · Transient Navier–Stokes flow around a cylinder</a></li><li class="is-active"><a class="tocitem" href>12 · Pulsatile blood flow in a patient aorta</a><ul class="internal"><li><a class="tocitem" href="#Problem-statement"><span>Problem statement</span></a></li><li><a class="tocitem" href="#Setup"><span>Setup</span></a></li><li><a class="tocitem" href="#Geometry-and-mesh"><span>Geometry and mesh</span></a></li><li><a class="tocitem" href="#Windkessel-parameters"><span>Windkessel parameters</span></a></li><li><a class="tocitem" href="#Boundary-conditions-and-finite-element-spaces"><span>Boundary conditions and finite element spaces</span></a></li><li><a class="tocitem" href="#Weak-form"><span>Weak form</span></a></li><li><a class="tocitem" href="#Solver-and-computational-model"><span>Solver and computational model</span></a></li><li><a class="tocitem" href="#Post-processing"><span>Post-processing</span></a></li><li><a class="tocitem" href="#Solve"><span>Solve</span></a></li><li><a class="tocitem" href="#Checks"><span>Checks</span></a></li><li><a class="tocitem" href="#Comparison-with-the-0D-model-(full-run)"><span>Comparison with the 0D model (full run)</span></a></li><li><a class="tocitem" href="#Efficiency-of-the-compiled-backend-(full-run)"><span>Efficiency of the compiled backend (full run)</span></a></li><li><a class="tocitem" href="#Going-further"><span>Going further</span></a></li></ul></li></ul></li><li><span class="tocitem">Solvers</span><ul><li><a class="tocitem" href="../E13_Solvers/">13 · Linear solvers for large problems</a></li><li><a class="tocitem" href="../E14_Multigrid/">14 · Geometric h- and p-multigrid</a></li></ul></li><li><span class="tocitem">Dynamics</span><ul><li><a class="tocitem" href="../E15_Elastodynamics/">15 · Elastodynamics: free vibration of a cantilever</a></li><li><a class="tocitem" href="../E16_ViscoElectroMechanics/">16 · Visco-electro-mechanics: creep of a dielectric bimorph</a></li><li><a class="tocitem" href="../E18_Explicit_wave_propagation/">18 · Explicit dynamics: wave propagation in a bar</a></li></ul></li><li><a class="tocitem" href="../../running/">Running and testing</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Fluids</a></li><li class="is-active"><a href>12 · Pulsatile blood flow in a patient aorta</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>12 · Pulsatile blood flow in a patient aorta</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/MultiSimOLab/HyperFEMTutorials.jl" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/MultiSimOLab/HyperFEMTutorials.jl/blob/main/src/E12_Aorta_blood_flow.jl" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="Tutorial-12:-Pulsatile-blood-flow-in-a-patient-aorta"><a class="docs-heading-anchor" href="#Tutorial-12:-Pulsatile-blood-flow-in-a-patient-aorta">Tutorial 12: Pulsatile blood flow in a patient aorta</a><a id="Tutorial-12:-Pulsatile-blood-flow-in-a-patient-aorta-1"></a><a class="docs-heading-anchor-permalink" href="#Tutorial-12:-Pulsatile-blood-flow-in-a-patient-aorta" title="Permalink"></a></h1><p><a href="https://github.com/MultiSimOLab/HyperFEMTutorials.jl/blob/main/src/E12_Aorta_blood_flow.jl">Source</a> · <a href="https://multisimolab.github.io/HyperFEMTutorials.jl/dev/notebooks/E12_Aorta_blood_flow.ipynb">Notebook</a> · <a href="https://nbviewer.org/urls/multisimolab.github.io/HyperFEMTutorials.jl/dev/notebooks/E12_Aorta_blood_flow.ipynb">nbviewer</a></p><p>Blood is pumped by the heart into the aorta in short pulses and leaves it through the descending aorta and the three supra-aortic branches. We compute one cardiac cycle of the incompressible Navier–Stokes flow in a patient-specific (rigid) aorta, with the formulation of tutorial 11, a pulsatile inflow and three-element Windkessel models at the four outlets: each outlet sees the resistance and the compliance of the arterial tree downstream, which gives physiological pressures. The 3D flow and the four 0D models are coupled at every time step.</p><p>Measured on a Mac (M5 Max, 4 Julia threads, 4 BLAS threads, Julia 1.13.0, HyperFEM 0.3.0, HyperFEMKernels 0.2.6, Gridap 0.20.8): 16 659 free dofs (P1–P1 on 33 643 tetrahedra). FAST (10 time steps) 92 s and full (one cycle, 200 time steps) 170 s, including compilation (the first step takes about 24 s); 0.21 s per time step after that. One assembly of the step Jacobian (the check at the end): 0.06 s with the compiled backend, 0.65 s with Gridap.</p><p><strong>What you will learn</strong></p><ul><li>boundary terms and lumped (0D) models in a <code>TransientModel</code>: Robin outlet conditions and backflow stabilisation in the weak form, and an explicit 3D–0D coupling through the <code>presolver</code> and <code>internal</code> hooks;</li><li>a time-dependent Dirichlet condition, <code>BoundaryCondition(tag, profile, t -&gt; Q(t))</code>;</li><li>the compiled backend of HyperFEMKernels (<code>backend=:compiled</code>) for a 3D stabilised flow problem, and how to check that it takes its fast paths (<code>HyperFEMKernels.work_summary</code>);</li><li>mass-conservation checks of a 3D–0D model and a comparison with a pure 0D model.</li></ul><h2 id="Problem-statement"><a class="docs-heading-anchor" href="#Problem-statement">Problem statement</a><a id="Problem-statement-1"></a><a class="docs-heading-anchor-permalink" href="#Problem-statement" title="Permalink"></a></h2><p>Find the velocity <span>$\boldsymbol u$</span> and the pressure <span>$p$</span> in the lumen <span>$\Omega$</span> such that</p><p class="math-container">\[\rho\left(\partial_t\boldsymbol u + (\nabla\boldsymbol u)\,\boldsymbol u\right) - \nabla\cdot\boldsymbol\sigma = \boldsymbol 0 ,
+\qquad \nabla\cdot\boldsymbol u = 0 , \qquad
+\boldsymbol\sigma = -p\boldsymbol I + 2\mu\,\boldsymbol\varepsilon(\boldsymbol u) ,\]</p><p>with blood as a Newtonian fluid, <span>$\rho = 1050$</span> kg/m³ and <span>$\mu = 3.5$</span> mPa s. We work in mm, s and g: the density is <span>$1.05\cdot 10^{-3}$</span> g/mm³, the viscosity <span>$3.5\cdot 10^{-3}$</span> g/(mm s) = Pa s, and pressures come out in Pa.</p><p><strong>Inlet.</strong> The flow rate is a half sine during systole (period <span>$T = 1$</span> s, systole <span>$T_s = 0.34$</span> s, stroke volume <span>$V_s = 83.3$</span> ml) and zero in diastole:</p><p class="math-container">\[Q(t) = \frac{\pi V_s}{2T_s}\sin\frac{\pi t}{T_s} \quad (0 \le t \le T_s), \qquad Q(t) = 0 \quad (T_s &lt; t &lt; T) .\]</p><p>The velocity at the inlet is <span>$\boldsymbol u = Q(t)\,\boldsymbol g(\boldsymbol x)$</span>, with <span>$\boldsymbol g$</span> a plug profile along the mean inward normal that vanishes on the rim of the inlet (no slip) and carries a unit flow rate. <strong>Wall</strong>: no slip, <span>$\boldsymbol u = \boldsymbol 0$</span> (rigid wall).</p><p><strong>Outlets.</strong> At each outlet <span>$\Gamma_i$</span> (descending aorta, brachiocephalic trunk, left common carotid and left subclavian arteries) a three-element Windkessel (RCR) model relates the flow rate <span>$Q_i = \int_{\Gamma_i}\boldsymbol u\cdot\boldsymbol n\,\mathrm d\Gamma$</span> and the pressure: a proximal resistance <span>$Z_i$</span> in series with a capacitor <span>$C_i$</span> (the compliance of the arteries downstream) that discharges through a distal resistance <span>$R_i$</span>,</p><p class="math-container">\[\boldsymbol\sigma\boldsymbol n = -\left(P_{c,i} + Z_i Q_i\right)\boldsymbol n ,
+\qquad C_i \frac{\mathrm dP_{c,i}}{\mathrm dt} = Q_i - \frac{P_{c,i}}{R_i} .\]</p><p>The compliance pressure <span>$P_{c,i}$</span> is advanced with backward Euler using the flow rate of the previous step (explicit coupling), and the proximal term enters the weak form implicitly as a Robin term, <span>$\int_{\Gamma_i} Z_i A_i\,(\boldsymbol u\cdot\boldsymbol n)(\boldsymbol v\cdot\boldsymbol n)\,\mathrm d\Gamma$</span>, which equals <span>$Z_i Q_i\int_{\Gamma_i}\boldsymbol v\cdot\boldsymbol n\,\mathrm d\Gamma$</span> when the normal velocity is uniform on the outlet (area <span>$A_i$</span>). The values of <span>$Z_i$</span>, <span>$C_i$</span>, <span>$R_i$</span> are those of the aorta example of HyperFEMKernels.jl (<code>examples/aorta_cfd/aorta_flow.jl</code>): the descending aorta from Mousavi et al. (2021, Table 6, case «Aneurysmal 1») and the three supra-aortic branches B1–B3 from Youssefi et al. (2018, Table 1, subject A).</p><p><strong>Backflow.</strong> During deceleration and diastole blood flows back into the domain through parts of the outlets, and the kinetic energy that enters there can make the computation blow up. The backflow stabilisation <span>$-\rho\int_{\Gamma_i}(\boldsymbol w\cdot\boldsymbol n)_-\,\boldsymbol u\cdot\boldsymbol v\,\mathrm d\Gamma$</span>, with <span>$(a)_- = \min(a, 0)$</span>, acts only where the flow enters (Bazilevs et al. 2009, DOI 10.1016/j.cma.2009.04.015; Esmaily-Moghadam et al. 2011, DOI 10.1007/s00466-011-0599-0).</p><p><strong>Discretisation.</strong> As in tutorial 11: linear velocity and pressure (P1–P1) with SUPG, PSPG and LSIC stabilisation, BDF2 in time with an extrapolated advecting velocity <span>$\boldsymbol w = 2\boldsymbol u^n - \boldsymbol u^{n-1}$</span> (an Oseen problem: one linear system per step), <span>$\Delta t = 5$</span> ms. The element size is the edge of the regular tetrahedron with the volume of the cell, <span>$h = (6\sqrt2\,|K|)^{1/3}$</span>.</p><h2 id="Setup"><a class="docs-heading-anchor" href="#Setup">Setup</a><a id="Setup-1"></a><a class="docs-heading-anchor-permalink" href="#Setup" title="Permalink"></a></h2><pre><code class="language-julia hljs">using HyperFEM
+using HyperFEMKernels      # the compiled backend (`backend=:compiled`) and its introspection
+using Gridap
+using GridapGmsh
+using LinearAlgebra
+using Printf
+
+const FAST = get(ENV, &quot;HYPERFEM_TUTORIALS_FAST&quot;, &quot;0&quot;) == &quot;1&quot;   # reduced case for the test suite
+outdir = joinpath(@__DIR__, &quot;..&quot;, &quot;data&quot;, &quot;sims&quot;, &quot;E12_Aorta_blood_flow&quot;)
+setupfolder(outdir)                                            # VTK output (not versioned)</code></pre><p>The constants read by functions evaluated at quadrature points (the stabilisation parameters) or by the inflow <span>$Q(t)$</span> are <code>const</code>: a non-constant global read inside such a function is looked up dynamically at every evaluation, which makes the compiled Jacobian several times slower.</p><pre><code class="language-julia hljs">const ρ = 1050e-6                                              # g/mm³
+const μ = 3.5e-3                                               # Pa s
+const Tc = 1.0                                                 # s: cardiac period
+const Ts = 0.34                                                # s: systole
+const Vs = 83.3e3                                              # mm³: stroke volume (83.3 ml)
+const Qmax = π * Vs / (2Ts)                                    # mm³/s: peak flow rate
+Qin(t) = (τ = mod(t, Tc); τ &lt;= Ts ? Qmax * sin(π * τ / Ts) : 0.0)
+const mmHg = 133.322                                           # Pa</code></pre><h2 id="Geometry-and-mesh"><a class="docs-heading-anchor" href="#Geometry-and-mesh">Geometry and mesh</a><a id="Geometry-and-mesh-1"></a><a class="docs-heading-anchor-permalink" href="#Geometry-and-mesh" title="Permalink"></a></h2><p>A patient aorta (ascending aorta, arch with three branches and descending aorta), 33 643 linear tetrahedra, with the physical surfaces <code>inlet</code>, <code>wall</code>, <code>outlet</code> (descending aorta), <code>B1</code>, <code>B2</code>, <code>B3</code> (branches). The mesh is coarse: most of its nodes lie on the wall, so the boundary layers are not resolved; it is meant to show the method, not to give converged wall shear stresses.</p><pre><code class="language-julia hljs">model = GmshDiscreteModel(joinpath(@__DIR__, &quot;..&quot;, &quot;data&quot;, &quot;models&quot;, &quot;aorta_fluido_h1p5_3p0.msh&quot;))</code></pre><p>GridapGmsh gives each physical surface its triangles, but an edge or a vertex shared by two surfaces belongs to only one of them. A Dirichlet condition needs all the nodes of its faces, so we add the edges and vertices of the faces of <code>inlet</code> and then of <code>wall</code> to their tags; the shared ones (the rim of the inlet) end up in the last tag, <code>wall</code>: the inflow profile vanishes on the rim.</p><pre><code class="language-julia hljs">function close_boundary_tags!(model, names)
+  labels = get_face_labeling(model)
+  topo = Gridap.Geometry.get_grid_topology(model)
+  D = num_cell_dims(model)
+  for name in names
+    tag = findfirst(==(name), labels.tag_to_name)
+    faces = findall(Gridap.Geometry.get_face_mask(labels, name, D - 1))
+    for d in 0:D-2
+      f_to_d = Gridap.Geometry.get_faces(topo, D - 1, d)
+      ents = labels.d_to_dface_to_entity[d+1]
+      newent = maximum(maximum(e) for e in labels.d_to_dface_to_entity) + 1
+      for f in faces, e in f_to_d[f]
+        ents[e] = newent
+      end
+      push!(labels.tag_to_entities[tag], newent)
+    end
+  end
+  model
+end
+close_boundary_tags!(model, [&quot;inlet&quot;, &quot;wall&quot;])
+
+Ω = Triangulation(model)
+dΩ = Measure(Ω, 3)
+he = CellField(map(v -&gt; (6sqrt(2) * v)^(1 / 3), collect(get_cell_measure(Ω))), Ω)   # element size
+Γin = BoundaryTriangulation(model, tags=&quot;inlet&quot;)
+dΓin = Measure(Γin, 2)
+nin = get_normal_vector(Γin)                                   # outward normal of the fluid
+Ain = sum(∫(1.0)dΓin)
+n̄ = sum(∫(nin)dΓin) / Ain                                      # mean outward normal of the inlet</code></pre><h2 id="Windkessel-parameters"><a class="docs-heading-anchor" href="#Windkessel-parameters">Windkessel parameters</a><a id="Windkessel-parameters-1"></a><a class="docs-heading-anchor-permalink" href="#Windkessel-parameters" title="Permalink"></a></h2><p>The values are given in SI units (Pa s/m³ and m³/Pa) and converted to mm–s–g. <code>ZA</code> is <span>$Z_i A_i$</span>, the coefficient of the Robin term.</p><pre><code class="language-julia hljs">outs = [&quot;outlet&quot;, &quot;B1&quot;, &quot;B2&quot;, &quot;B3&quot;]
+SIR, SIC = 1e-9, 1e9                                           # Pa s/m³ → Pa s/mm³, m³/Pa → mm³/Pa
+Z = [1.5e7, 1.36e8, 2.46e8, 1.74e8] .* SIR
+C = [1.05e-8, 4.83e-10, 2.92e-10, 3.93e-10] .* SIC
+R = [2.5e8, 9.23e8, 1.53e9, 1.13e9] .* SIR
+Γo = [BoundaryTriangulation(model, tags=o) for o in outs]
+dΓo = [Measure(Γ, 2) for Γ in Γo]
+no = [get_normal_vector(Γ) for Γ in Γo]
+ZA = [Z[i] * sum(∫(1.0)dΓo[i]) for i in eachindex(outs)]
+flux(uh, i) = sum(∫(uh ⋅ no[i])dΓo[i])                         # outflow rate through outlet i</code></pre><p>The same four Windkessel models attached to a rigid, inviscid aorta (a single node with pressure <span>$P$</span>) give a 0D model of the whole circulation downstream: <span>$Q(t) = \sum_i (P - P_{c,i})/Z_i$</span> and <span>$C_i\,\dot P_{c,i} = (P - P_{c,i})/Z_i - P_{c,i}/R_i$</span>. Integrated over 30 cycles (RK4) it reaches its periodic state, which gives the compliance pressures at <span>$t = 0$</span> (the initial values of the 3D computation: the flow starts at rest, at the end of diastole) and a reference for the pressures and the split of the flow.</p><pre><code class="language-julia hljs">function windkessel_0d(Qin, Z, C, R; T, h=1e-4, ncycles=30)
+  P0(t, Pc) = (Qin(t) + sum(Pc ./ Z)) / sum(1 ./ Z)
+  f(t, Pc) = ((P0(t, Pc) .- Pc) ./ Z .- Pc ./ R) ./ C
+  rk4(t, y) = (k1 = f(t, y); k2 = f(t + h / 2, y + h / 2 * k1); k3 = f(t + h / 2, y + h / 2 * k2);
+               k4 = f(t + h, y + h * k3); y + h / 6 * (k1 + 2k2 + 2k3 + k4))
+  nper = round(Int, T / h)
+  Qm = sum(Qin(k * h) for k in 0:nper-1) / nper
+  Pc = R ./ (Z .+ R) .* (Qm / sum(1 ./ (Z .+ R)))             # mean state as the starting point
+  for k in 0:ncycles*nper-1
+    Pc = rk4(k * h, Pc)
+  end
+  Pc0 = copy(Pc)
+  ts, P, Q = Float64[], Float64[], Vector{Float64}[]           # one period of the periodic state
+  for k in 0:nper
+    t = k * h; p = P0(t, Pc)
+    push!(ts, t); push!(P, p); push!(Q, (p .- Pc) ./ Z)
+    Pc = rk4(t, Pc)
+  end
+  (; Pc0, ts, P, Q)
+end
+ref0d = windkessel_0d(Qin, Z, C, R; T=Tc)
+@printf(&quot;0D model: P from %.1f to %.1f mmHg, Pc(0) = %s mmHg\n&quot;, minimum(ref0d.P) / mmHg, maximum(ref0d.P) / mmHg,
+        string(round.(ref0d.Pc0 ./ mmHg, digits=1)))</code></pre><h2 id="Boundary-conditions-and-finite-element-spaces"><a class="docs-heading-anchor" href="#Boundary-conditions-and-finite-element-spaces">Boundary conditions and finite element spaces</a><a id="Boundary-conditions-and-finite-element-spaces-1"></a><a class="docs-heading-anchor-permalink" href="#Boundary-conditions-and-finite-element-spaces" title="Permalink"></a></h2><p>The plug profile is the interpolation of <span>$-\bar{\boldsymbol n}$</span> on the inlet with zero on the wall (and so on the rim); its discrete flow rate <span>$q_1$</span> normalises it, so that the imposed flow rate is exactly <span>$Q(t)$</span>. The profile and the time function are given separately: <code>BoundaryCondition(&quot;inlet&quot;, g, Qin)</code> imposes <span>$\boldsymbol g(\boldsymbol x)\,Q(t)$</span>. The profile is built by a function that returns a closure, so that the pointwise function reads its own captured value and not a global variable.</p><pre><code class="language-julia hljs">reffeu = ReferenceFE(lagrangian, VectorValue{3,Float64}, 1)
+reffep = ReferenceFE(lagrangian, Float64, 1)
+uniform(a) = x -&gt; a
+Vaux = TestFESpace(model, reffeu; conformity=:H1, dirichlet_tags=[&quot;inlet&quot;, &quot;wall&quot;])
+u1 = FEFunction(TrialFESpace(Vaux, [uniform(-n̄), uniform(zero(n̄))]), zeros(num_free_dofs(Vaux)))
+q1 = -sum(∫(u1 ⋅ nin)dΓin)
+D_bc = MultiFieldBC([
+  BoundaryConditions(
+    BoundaryCondition(&quot;inlet&quot;, uniform(-n̄ / q1), Qin),
+    BoundaryCondition(&quot;wall&quot;, [0.0, 0.0, 0.0])),
+  NothingBC()])
+Vu = TestFESpace(model, reffeu, D_bc[1], conformity=:H1)
+Vp = TestFESpace(model, reffep, D_bc[2], conformity=:H1)
+V = MultiFieldFESpace([Vu, Vp])
+U = MultiFieldFESpace([TrialFESpace(Vu, D_bc[1], 0.0), TrialFESpace(Vp, D_bc[2], 0.0)])</code></pre><h2 id="Weak-form"><a class="docs-heading-anchor" href="#Weak-form">Weak form</a><a id="Weak-form-1"></a><a class="docs-heading-anchor-permalink" href="#Weak-form" title="Permalink"></a></h2><p>The volume terms are those of tutorial 11 (with <span>$h$</span> of tetrahedra); the outlets add the Robin term of the proximal resistances and the backflow stabilisation, which are part of the operator, and the compliance pressures <span>$P_{c,i}$</span>, which are known numbers of the step and only enter the residual. <code>Pc</code> holds the compliance pressures of the step being computed and <code>Pcn</code> those of the last accepted step.</p><pre><code class="language-julia hljs">Pcn = copy(ref0d.Pc0)
+Pc = copy(Pcn)
+τsupg(u, h) = ((2 * norm(u) / h)^2 + 9 * (4μ / (ρ * h^2))^2)^(-1 / 2)
+τpspg(u, h) = τsupg(u, h) / ρ
+τlsic(u, h) = ρ * norm(u) * h * 0.5
+ε(∇u) = 0.5 * (∇u + ∇u&#39;)
+negpart(a) = 0.5 * (a - abs(a))
+function advecting(cu)
+  a, b = cu.step == 1 ? (1.0, 0.0) : (2.0, 1.0)
+  a * cu.u⁻ - b * cu.u⁻⁻
+end</code></pre><p>The bilinear part of a step, with the advecting velocity <code>w</code>, the velocity <code>un</code> of the previous step (for the <span>$\tau$</span>&#39;s) and the time derivative <code>ut</code> of the unknown:</p><pre><code class="language-julia hljs">function step_form(w, un, (u, p), ut, (v, q))
+  τs = τsupg ∘ (un, he); τp = τpspg ∘ (un, he); τl = τlsic ∘ (un, he)
+  Ru = ρ * ut + ρ * (∇(u)&#39; ⋅ w)
+  a = ∫(ρ * (ut ⋅ v))dΩ + ∫(2μ * (ε ∘ (∇(u))) ⊙ (ε ∘ (∇(v))))dΩ + ∫(ρ * ((∇(u)&#39; ⋅ w) ⋅ v))dΩ -
+      ∫(p * (∇ ⋅ v))dΩ - ∫(q * (∇ ⋅ u))dΩ +
+      ∫(τs * ((∇(v)&#39; ⋅ w) ⋅ Ru))dΩ + ∫(τs * ((∇(v)&#39; ⋅ w) ⋅ ∇(p)))dΩ -
+      ∫(τp * (∇(q) ⋅ Ru))dΩ - ∫(τp * (∇(q) ⋅ ∇(p)))dΩ +
+      ∫(τl * (∇ ⋅ v) * (∇ ⋅ u))dΩ
+  for i in eachindex(outs)
+    a = a + ∫(ZA[i] * (u ⋅ no[i]) * (v ⋅ no[i]))dΓo[i] - ∫(ρ * (negpart ∘ (w ⋅ no[i])) * (u ⋅ v))dΓo[i]
+  end
+  a
+end
+function res(ctx)
+  cu = ctx[1]
+  un = cu.u⁻; w = advecting(cu)
+  ((u, p), (v, q)) -&gt; begin
+    r = step_form(w, un, (u, p), ∂t(cu, u), (v, q))
+    for i in eachindex(outs)
+      r = r + ∫(Pc[i] * (v ⋅ no[i]))dΓo[i]
+    end
+    r
+  end
+end
+function jac(ctx)
+  cu = ctx[1]
+  un = cu.u⁻; w = advecting(cu)
+  ((u, p), (du, dp), (v, q)) -&gt; step_form(w, un, (du, dp), δ∂t(cu, du), (v, q))
+end</code></pre><h2 id="Solver-and-computational-model"><a class="docs-heading-anchor" href="#Solver-and-computational-model">Solver and computational model</a><a id="Solver-and-computational-model-1"></a><a class="docs-heading-anchor-permalink" href="#Solver-and-computational-model" title="Permalink"></a></h2><p><code>backend=:compiled</code> assembles with the compiled, threaded kernels of HyperFEMKernels. The operator is compiled in the first step; in the next steps only the numbers that change (the BDF coefficients, the compliance pressures, the Dirichlet values) are read again from the weak form, and the compiled code, the sparsity pattern and the tables are reused. The step system has 16 659 unknowns: a sparse LU factorisation costs about 0.06 s, as much as one assembly of the Jacobian, so a direct solver is the right choice at this size (tutorial 13 shows the iterative solvers for larger problems).</p><p>The 0D models are advanced with two hooks. <code>presolver(t, Δt)</code> runs before every attempt of a step: it computes the compliance pressures of the attempt from the flow rates of the last accepted state. <code>internal(xh, xh⁻)</code> runs when the step is accepted: it makes them the new accepted values. With a fixed time step there are no rejected attempts, but the pair <code>Pc</code>/<code>Pcn</code> keeps the coupling right if a step were halved.</p><pre><code class="language-julia hljs">nls = NewtonRaphson(LUSolver(); verbose=0)
+accept_windkessel(xh, xh⁻) = (Pcn .= Pc)
+flow = TransientModel(res, jac, U, V, D_bc; scheme=BDF(2), tangent_update=:step, nls=nls,
+                      backend=:compiled, internal=accept_windkessel)</code></pre><p>The flow rates of the last accepted state are computed once, by the post-processing function below (which runs after every accepted step), and kept in <code>Qn</code> (zero at rest, before the first step).</p><pre><code class="language-julia hljs">Qn = zeros(length(outs))
+function windkessel!(t, Δt)
+  for i in eachindex(outs)
+    Pc[i] = (Pcn[i] + Δt * Qn[i] / C[i]) / (1 + Δt / (R[i] * C[i]))
+  end
+end</code></pre><h2 id="Post-processing"><a class="docs-heading-anchor" href="#Post-processing">Post-processing</a><a id="Post-processing-1"></a><a class="docs-heading-anchor-permalink" href="#Post-processing" title="Permalink"></a></h2><p>After every step we store the inflow rate (measured on the solution), the four outflow rates, the compliance pressures, the outlet pressures <span>$P_{c,i} + Z_iQ_i$</span>, the mean pressure on the inlet and the largest velocity component; the flow is written to VTK a few times per cycle.</p><pre><code class="language-julia hljs">Δt = 0.005
+nsteps = FAST ? 10 : round(Int, Tc / Δt)
+vtk_every = FAST ? nsteps : 20
+hist = (t=Float64[], qin=Float64[], qout=Vector{Float64}[], Pc=Vector{Float64}[], Pout=Vector{Float64}[],
+        pin=Float64[], umax=Float64[], wall=Float64[])
+tclock = Ref(time())
+function record(post)
+  uh, ph = get_state(flow)
+  t = post.Λ[end]
+  q = [flux(uh, i) for i in eachindex(outs)]
+  Qn .= q
+  push!(hist.t, t); push!(hist.qin, -sum(∫(uh ⋅ nin)dΓin)); push!(hist.qout, q); push!(hist.Pc, copy(Pc))
+  push!(hist.Pout, Pc .+ Z .* q); push!(hist.pin, sum(∫(ph)dΓin) / Ain)
+  push!(hist.umax, maximum(abs, get_free_dof_values(uh))); push!(hist.wall, time() - tclock[])
+  tclock[] = time()
+  if FAST || post.iter % 10 == 0
+    @printf(&quot;step %3d  t = %.3f s  Q_in = %6.1f ml/s  Q_out = %s ml/s  P_in = %5.1f mmHg  %.2f s\n&quot;, post.iter, t,
+            hist.qin[end] / 1e3, string(round.(q ./ 1e3, digits=1)), hist.pin[end] / mmHg, hist.wall[end])
+  end
+  if post.iter % vtk_every == 0
+    get_pvd(post)[t] = createvtk(Ω, joinpath(outdir, &quot;aorta_$(post.iter)&quot;), cellfields=[&quot;u&quot; =&gt; uh, &quot;p&quot; =&gt; ph])
+  end
+end
+post = PostProcessor(flow, record; is_vtk=true, filepath=outdir)</code></pre><h2 id="Solve"><a class="docs-heading-anchor" href="#Solve">Solve</a><a id="Solve-1"></a><a class="docs-heading-anchor-permalink" href="#Solve" title="Permalink"></a></h2><pre><code class="language-julia hljs">println(&quot;$(num_cells(Ω)) tetrahedra, $(num_free_dofs(U)) free dofs, $nsteps steps of $Δt s&quot;)
+tclock[] = time()
+x, flag = solve!(flow; stepping=TimeStepping(; Δt=Δt, t_end=nsteps * Δt), post=post, presolver=windkessel!)
+steady = hist.wall[3:end]                                       # the first two steps compile
+@printf(&quot;mean time per step after the first two: %.3f s\n&quot;, sum(steady) / length(steady))</code></pre><h2 id="Checks"><a class="docs-heading-anchor" href="#Checks">Checks</a><a id="Checks-1"></a><a class="docs-heading-anchor-permalink" href="#Checks" title="Permalink"></a></h2><p><strong>Mass conservation.</strong> The pressure test functions include the constants, and with <span>$q = 1$</span> the weak form says <span>$\int_\Omega\nabla\cdot\boldsymbol u\,\mathrm d\Omega = 0$</span> (the stabilisation terms contain <span>$\nabla q$</span>): the inflow equals the sum of the outflows at every step, to the precision of the linear solver. The measured inflow is the imposed <span>$Q(t)$</span>. The tolerance of these checks and of the volume budget below is <span>$10^{-10}$</span> relative to the peak flow: the LU solution is accurate to about <span>$10^{-12}$</span> (we measured <span>$9\cdot 10^{-13}$</span> for the mass balance), and the budget inherits that error.</p><pre><code class="language-julia hljs">qout_sum = [sum(q) for q in hist.qout]
+mass_err = maximum(abs.(hist.qin .- qout_sum)) / Qmax
+inflow_err = maximum(abs.(hist.qin .- Qin.(hist.t))) / Qmax
+println(&quot;max |Q_in - ΣQ_out| / Q_max = $mass_err,  max |Q_in - Q(t)| / Q_max = $inflow_err&quot;)
+@assert flag == 1 &quot;the time loop did not complete&quot;
+@assert length(hist.t) == nsteps &quot;a time step was bisected&quot;
+@assert mass_err &lt; 1e-10 &quot;mass is not conserved: max |Q_in - ΣQ_out| / Q_max = $mass_err&quot;
+@assert inflow_err &lt; 1e-10 &quot;the inflow rate differs from Q(t): $inflow_err&quot;</code></pre><p><strong>Volume budget of the 3D–0D system.</strong> The volume that entered up to the previous step is stored in the compliances or has left through the distal resistances: summing the update of <span>$P_{c,i}$</span> over the steps, <span>$\Delta t\sum_{k&lt;N}Q_{in}^k = \sum_i C_i\,(P_{c,i}^N - P_{c,i}^0) + \Delta t\sum_{k\le N}\sum_i P_{c,i}^k/R_i$</span> (the flow rate is lagged by one step, and <span>$Q^0 = 0$</span>: the flow starts at rest).</p><pre><code class="language-julia hljs">Vin = Δt * sum(hist.qin[1:end-1])
+Vstored = sum(C .* (hist.Pc[end] .- ref0d.Pc0))
+Vdrained = Δt * sum(sum(Pk ./ R) for Pk in hist.Pc)
+budget_err = abs(Vin - Vstored - Vdrained) / (Δt * nsteps * Qmax)
+@printf(&quot;volume budget: in %.1f ml = stored %.1f ml + drained %.1f ml  (relative error %.1e)\n&quot;,
+        Vin / 1e3, Vstored / 1e3, Vdrained / 1e3, budget_err)
+@assert budget_err &lt; 1e-10 &quot;the volume budget of the Windkessel models does not close: $budget_err&quot;</code></pre><p><strong>Physiological range.</strong> The pressures at the outlets and at the inlet stay in the physiological range of the systemic arteries, and the velocity stays bounded (the backflow stabilisation does its job).</p><pre><code class="language-julia hljs">Pall = reduce(vcat, hist.Pout)
+@printf(&quot;outlet pressures %.1f–%.1f mmHg, inlet %.1f–%.1f mmHg, max velocity component %.0f mm/s\n&quot;,
+        minimum(Pall) / mmHg, maximum(Pall) / mmHg, minimum(hist.pin) / mmHg, maximum(hist.pin) / mmHg, maximum(hist.umax))
+@assert all(p -&gt; 50mmHg &lt; p &lt; 180mmHg, Pall) &quot;outlet pressure out of the physiological range&quot;
+@assert all(p -&gt; 50mmHg &lt; p &lt; 180mmHg, hist.pin) &quot;inlet pressure out of the physiological range&quot;
+@assert maximum(hist.umax) &lt; 3000 &quot;velocity above 3 m/s&quot;</code></pre><p><strong>Regression values</strong> of the final state (HyperFEM 0.3.0, HyperFEMKernels 0.2.6, Gridap 0.20.8, Julia 1.13.0, macOS arm64): the norm of the vector of free values (dominated by the pressures, in Pa) and the mean inlet pressure (Pa), after 10 steps (FAST) and after one cycle.</p><pre><code class="language-julia hljs">println(&quot;regression: ‖x‖ = $(norm(x)), Pc = $(hist.Pc[end]), P_in = $(hist.pin[end])&quot;)
+if FAST
+  @assert isapprox(norm(x), 1.5565908708897454e6, rtol=1e-5) &quot;regression: ‖x‖ = $(norm(x))&quot;
+  @assert isapprox(hist.pin[end], 16656.492743907616, rtol=1e-5) &quot;regression: P_in = $(hist.pin[end])&quot;
+else
+  @assert isapprox(norm(x), 1.0728389663079288e6, rtol=1e-5) &quot;regression: ‖x‖ = $(norm(x))&quot;
+  @assert isapprox(hist.pin[end], 10492.936373140392, rtol=1e-5) &quot;regression: P_in = $(hist.pin[end])&quot;
+end</code></pre><h2 id="Comparison-with-the-0D-model-(full-run)"><a class="docs-heading-anchor" href="#Comparison-with-the-0D-model-(full-run)">Comparison with the 0D model (full run)</a><a id="Comparison-with-the-0D-model-(full-run)-1"></a><a class="docs-heading-anchor-permalink" href="#Comparison-with-the-0D-model-(full-run)" title="Permalink"></a></h2><p>Over one cycle the 3D–0D model and the 0D model see the same inflow and the same Windkessel models; they differ by the resistance and the inertia of the aorta itself and by the spatial distribution of the pressure at the outlets. We compare the volume that leaves through each outlet in the cycle and the extreme pressures of the descending aorta. We measured differences of 0.2–2.7 % in the volumes (the branches, whose flow depends more on the 3D pressure distribution, differ most) and of about 1 % in the extreme pressures; the tolerances are 5 % and 3 %.</p><pre><code class="language-julia hljs">if !FAST
+  vol3d = Δt .* reduce(+, hist.qout)
+  w0 = [k == 1 || k == length(ref0d.ts) ? 0.5 : 1.0 for k in eachindex(ref0d.ts)]
+  vol0d = (ref0d.ts[2] - ref0d.ts[1]) .* reduce(+, w0 .* ref0d.Q)
+  Pdesc = [P[1] for P in hist.Pout]
+  println(&quot;outlet                volume 3D (ml)   volume 0D (ml)&quot;)
+  for i in eachindex(outs)
+    @printf(&quot;  %-8s           %10.2f       %10.2f\n&quot;, outs[i], vol3d[i] / 1e3, vol0d[i] / 1e3)
+  end
+  @printf(&quot;descending aorta: P 3D %.1f–%.1f mmHg, 0D %.1f–%.1f mmHg\n&quot;, minimum(Pdesc) / mmHg, maximum(Pdesc) / mmHg,
+          minimum(ref0d.P) / mmHg, maximum(ref0d.P) / mmHg)
+  @assert all(isapprox.(vol3d ./ sum(vol3d), vol0d ./ sum(vol0d), rtol=0.05)) &quot;flow split away from the 0D model&quot;
+  @assert isapprox(maximum(Pdesc), maximum(ref0d.P), rtol=0.03) &quot;systolic pressure away from the 0D model&quot;
+  @assert isapprox(minimum(Pdesc), minimum(ref0d.P), rtol=0.03) &quot;diastolic pressure away from the 0D model&quot;
+end</code></pre><h2 id="Efficiency-of-the-compiled-backend-(full-run)"><a class="docs-heading-anchor" href="#Efficiency-of-the-compiled-backend-(full-run)">Efficiency of the compiled backend (full run)</a><a id="Efficiency-of-the-compiled-backend-(full-run)-1"></a><a class="docs-heading-anchor-permalink" href="#Efficiency-of-the-compiled-backend-(full-run)" title="Permalink"></a></h2><p>With Gridap&#39;s assembly (<code>backend=:lazy</code>) the Jacobian alone takes 0.65 s and dominates the step; with the compiled backend a step of 0.21 s splits into Jacobian 0.06 s, residual 0.04 s, LU 0.06 s and the rest (see below). Running this tutorial with <code>backend=:lazy</code> gives the same solution (‖x‖ equal to 1e-13 in FAST) at about 1.0 s per step. We build, on the final state, the Jacobian of a BDF2 step with the same forms, assemble it with Gridap and with a <code>KernelOperator</code> of HyperFEMKernels (what <code>backend=:compiled</code> does inside the model), and check that both give the same matrix and that the compiled one is at least four times faster: we measured eleven times, and a non-constant global read by a stabilisation parameter (see the setup) makes the compiled Jacobian about eight times slower, which this margin catches. <code>HyperFEMKernels.work_summary</code> lists the path each group of integrals takes: <code>:factorised</code> or <code>:linear_maps</code> are the fast paths; <code>:duals</code> (automatic differentiation at every point) would point at a weak form or a pointwise function the compiler could not analyse. We measured (4 threads) 0.06 s for the compiled Jacobian and 0.65 s for Gridap&#39;s, with the volume group and the four outlet groups all <code>:factorised</code> and nothing left to Gridap. Inside the model a step costs about 0.21 s: Jacobian 0.06 s, residual 0.04 s, LU factorisation 0.06 s, and the rest is the update of the operator with the numbers of the step and the post-processing.</p><pre><code class="language-julia hljs">if !FAST
+  uN = get_state(flow)[1]
+  c0 = 1.5 / Δt
+  kres(x, y) = step_form(uN, uN, x, c0 * x[1], y)
+  kjac(x, dx, y) = step_form(uN, uN, dx, c0 * dx[1], y)
+  x0 = zeros(num_free_dofs(U))
+  gop = Gridap.FESpaces.get_algebraic_operator(FEOperator(kres, kjac, U, V))
+  kop = KernelOperator(kres, kjac, U, V)
+  Ag = Gridap.Algebra.allocate_jacobian(gop, x0)
+  Ak = Gridap.Algebra.allocate_jacobian(kop, x0)
+  Gridap.Algebra.jacobian!(Ag, gop, x0); Gridap.Algebra.jacobian!(Ak, kop, x0)   # warm-up (compilation)
+  tg = minimum(@elapsed(Gridap.Algebra.jacobian!(Ag, gop, x0)) for _ in 1:3)
+  tk = minimum(@elapsed(Gridap.Algebra.jacobian!(Ak, kop, x0)) for _ in 1:3)
+  ws = HyperFEMKernels.work_summary(kop)
+  for g in ws.groups
+    g.kind === :jacobian &amp;&amp; println(&quot;  Jacobian group $(g.group): $(g.domain), $(g.cells) cells, path $(g.path)&quot;)
+  end
+  @printf(&quot;Jacobian assembly: compiled %.3f s, Gridap %.3f s (%d threads); fallback groups: %d\n&quot;, tk, tg,
+          Threads.nthreads(), ws.fallback_jacobian)
+  @assert norm(Ak - Ag) &lt; 1e-10 * norm(Ag) &quot;the compiled Jacobian differs from Gridap&#39;s&quot;
+  @assert ws.fallback_jacobian == 0 &quot;part of the Jacobian falls back to Gridap&quot;
+  @assert all(g -&gt; g.path !== :duals, filter(g -&gt; g.kind === :jacobian, ws.groups)) &quot;a Jacobian group takes the slow :duals path&quot;
+  @assert tk &lt; tg / 4 &quot;the compiled Jacobian ($tk s) is not four times faster than Gridap&#39;s ($tg s)&quot;
+end</code></pre><h2 id="Going-further"><a class="docs-heading-anchor" href="#Going-further">Going further</a><a id="Going-further-1"></a><a class="docs-heading-anchor-permalink" href="#Going-further" title="Permalink"></a></h2><ul><li>Two or more cycles: <code>nsteps = 2 * round(Int, Tc / Δt)</code>. The compliance pressures start from the periodic state of the 0D model, so the second cycle differs little from the first.</li><li>Taylor–Hood P2–P1 (99 141 dofs on this mesh) needs no PSPG and resolves the flow better; with quadratic velocities the SUPG residual also contains the viscous term <span>$-\mu\Delta\boldsymbol u^n$</span>, which must be computed (for instance by projecting <span>$\nabla\boldsymbol u^n$</span> onto discontinuous P1 functions).</li><li>A realistic inflow profile, from the solution of a Poisson problem on the inlet plus an eccentric valve jet, is in <code>examples/aorta_cfd/aorta_flow.jl</code> of HyperFEMKernels.jl, which also compares the assembly of that P2–P1 problem with Gridap and with HyperFEMKernels.</li><li><code>backend=:lazy</code> assembles with Gridap: same solution, slower steps.</li><li>Tutorial 11 validates the same formulation against the cylinder benchmark.</li><li>References: I. E. Vignon-Clementel et al., <em>Outflow boundary conditions for three-dimensional finite element modeling of blood flow and pressure in arteries</em>, Comput. Methods Appl. Mech. Eng. 195 (2006) 3776–3796, DOI 10.1016/j.cma.2005.04.014; T. E. Tezduyar, <em>Stabilized finite element formulations for incompressible flow computations</em>, Adv. Appl. Mech. 28 (1992) 1–44, DOI 10.1016/S0065-2156(08)70153-4; S. J. Mousavi, R. Jayendiran, S. Farzaneh, S. Campisi, M. Viallon, P. Croisille, S. Avril, <em>Coupling hemodynamics with mechanobiology in patient-specific computational models of ascending thoracic aortic aneurysms</em>, Comput. Methods Programs Biomed. 205 (2021) 106107, DOI 10.1016/j.cmpb.2021.106107 (Windkessel parameters of the descending aorta); P. Youssefi, A. Gomez, C. Arthurs, R. Sharma, M. Jahangiri, C. A. Figueroa, <em>Impact of patient-specific inflow velocity profile on hemodynamics of the thoracic aorta</em>, J. Biomech. Eng. 140 (2018) 011002, DOI 10.1115/1.4037857 (Windkessel parameters of the branches).</li></ul></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../E11_NavierStokes_transient/">« 11 · Transient Navier–Stokes flow around a cylinder</a><a class="docs-footer-nextpage" href="../E13_Solvers/">13 · Linear solvers for large problems »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.20.0 on <span class="colophon-date" title="Monday 23 November 2026 08:44">Monday 23 November 2026</span>. Using Julia version 1.13.4.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>

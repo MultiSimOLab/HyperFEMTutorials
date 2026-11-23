@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><meta name="referrer" content="no-referrer"/><title>19 · Constitutive models: energies, stresses and tangents · HyperFEM tutorials</title><meta name="title" content="19 · Constitutive models: energies, stresses and tangents · HyperFEM tutorials"/><meta property="og:title" content="19 · Constitutive models: energies, stresses and tangents · HyperFEM tutorials"/><meta property="twitter:title" content="19 · Constitutive models: energies, stresses and tangents · HyperFEM tutorials"/><meta name="description" content="Documentation for HyperFEM tutorials."/><meta property="og:description" content="Documentation for HyperFEM tutorials."/><meta property="twitter:description" content="Documentation for HyperFEM tutorials."/><meta property="og:url" content="https://multisimolab.github.io/HyperFEMTutorials.jl/dev/tutorials/E19_Constitutive_models/"/><meta property="twitter:url" content="https://multisimolab.github.io/HyperFEMTutorials.jl/dev/tutorials/E19_Constitutive_models/"/><link rel="canonical" href="https://multisimolab.github.io/HyperFEMTutorials.jl/dev/tutorials/E19_Constitutive_models/"/><script data-outdated-warner src="../../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.63.2/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../search_index.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-mocha.css" data-theme-name="catppuccin-mocha"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-macchiato.css" data-theme-name="catppuccin-macchiato"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-frappe.css" data-theme-name="catppuccin-frappe"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-latte.css" data-theme-name="catppuccin-latte"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../../">HyperFEM tutorials</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="../../">Home</a></li><li><span class="tocitem">Basics</span><ul><li><a class="tocitem" href="../E01_Poisson/">01 · Poisson equation</a></li><li><a class="tocitem" href="../E02_Hyperelastic_stretch/">02 · Uniaxial stretch of a hyperelastic bar</a></li><li><a class="tocitem" href="../E03_Fibre_reinforced_cylinder/">03 · Fibre-reinforced cylinder under internal pressure</a></li><li class="is-active"><a class="tocitem" href>19 · Constitutive models: energies, stresses and tangents</a><ul class="internal"><li><a class="tocitem" href="#Problem-statement"><span>Problem statement</span></a></li><li><a class="tocitem" href="#Setup"><span>Setup</span></a></li><li><a class="tocitem" href="#Kinematics"><span>Kinematics</span></a></li><li><a class="tocitem" href="#A-first-model"><span>A first model</span></a></li><li><a class="tocitem" href="#The-model-catalogue"><span>The model catalogue</span></a></li><li><a class="tocitem" href="#Writing-your-own-model"><span>Writing your own model</span></a></li><li><a class="tocitem" href="#Homogeneous-tests"><span>Homogeneous tests</span></a></li><li><a class="tocitem" href="#Checks"><span>Checks</span></a></li><li><a class="tocitem" href="#Efficiency"><span>Efficiency</span></a></li><li><a class="tocitem" href="#Going-further"><span>Going further</span></a></li></ul></li></ul></li><li><span class="tocitem">Coupled problems</span><ul><li><a class="tocitem" href="../E04_ElectroMechanics/">04 · Electro-mechanics of a dielectric elastomer</a></li><li><a class="tocitem" href="../E05_ElectroMechanics_anisotropic/">05 · Anisotropic electro-mechanics</a></li><li><a class="tocitem" href="../E08_MagnetoMechanical_beam/">08 · Magneto-mechanical hMRE beam</a></li><li><a class="tocitem" href="../E09_hMRE_vacuum_staggered/">09 · hMRE beam in vacuum: staggered solution</a></li><li><a class="tocitem" href="../E17_ThermoMechanics/">17 · Thermo-mechanics: transient heat conduction and thermal expansion</a></li></ul></li><li><span class="tocitem">Contact</span><ul><li><a class="tocitem" href="../E06_ThirdMedium_contact/">06 · Third-medium contact</a></li></ul></li><li><span class="tocitem">Optimisation</span><ul><li><a class="tocitem" href="../../E07_Topology_optimization/">07 · Topology optimisation (in preparation)</a></li></ul></li><li><span class="tocitem">Fluids</span><ul><li><a class="tocitem" href="../E10_Stokes/">10 · Stokes flow around a cylinder</a></li><li><a class="tocitem" href="../E11_NavierStokes_transient/">11 · Transient Navier–Stokes flow around a cylinder</a></li><li><a class="tocitem" href="../E12_Aorta_blood_flow/">12 · Pulsatile blood flow in a patient aorta</a></li></ul></li><li><span class="tocitem">Solvers</span><ul><li><a class="tocitem" href="../E13_Solvers/">13 · Linear solvers for large problems</a></li><li><a class="tocitem" href="../E14_Multigrid/">14 · Geometric h- and p-multigrid</a></li></ul></li><li><span class="tocitem">Dynamics</span><ul><li><a class="tocitem" href="../E15_Elastodynamics/">15 · Elastodynamics: free vibration of a cantilever</a></li><li><a class="tocitem" href="../E16_ViscoElectroMechanics/">16 · Visco-electro-mechanics: creep of a dielectric bimorph</a></li><li><a class="tocitem" href="../E18_Explicit_wave_propagation/">18 · Explicit dynamics: wave propagation in a bar</a></li></ul></li><li><a class="tocitem" href="../../running/">Running and testing</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Basics</a></li><li class="is-active"><a href>19 · Constitutive models: energies, stresses and tangents</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>19 · Constitutive models: energies, stresses and tangents</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/MultiSimOLab/HyperFEMTutorials.jl" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/MultiSimOLab/HyperFEMTutorials.jl/blob/main/src/E19_Constitutive_models.jl" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="Tutorial-19:-Constitutive-models:-energies,-stresses-and-tangents"><a class="docs-heading-anchor" href="#Tutorial-19:-Constitutive-models:-energies,-stresses-and-tangents">Tutorial 19: Constitutive models: energies, stresses and tangents</a><a id="Tutorial-19:-Constitutive-models:-energies,-stresses-and-tangents-1"></a><a class="docs-heading-anchor-permalink" href="#Tutorial-19:-Constitutive-models:-energies,-stresses-and-tangents" title="Permalink"></a></h1><p><a href="https://github.com/MultiSimOLab/HyperFEMTutorials.jl/blob/main/src/E19_Constitutive_models.jl">Source</a> · <a href="https://multisimolab.github.io/HyperFEMTutorials.jl/dev/notebooks/E19_Constitutive_models.ipynb">Notebook</a> · <a href="https://nbviewer.org/urls/multisimolab.github.io/HyperFEMTutorials.jl/dev/notebooks/E19_Constitutive_models.ipynb">nbviewer</a></p><p>Every simulation of HyperFEM starts from a constitutive model: a small object that returns the stored energy <span>$\Psi(\boldsymbol F)$</span>, the first Piola–Kirchhoff stress <span>$\partial_{\boldsymbol F}\Psi$</span> and the tangent <span>$\partial^2_{\boldsymbol F\boldsymbol F}\Psi$</span> as plain Julia functions. This tutorial uses them without finite elements: it evaluates several hyperelastic models in the three classical homogeneous tests (uniaxial tension, equibiaxial tension and simple shear), checks them against closed-form solutions and against their own derivatives, and writes a new model with the same interface.</p><p><strong>What you will learn</strong></p><ul><li>the interface of the <code>PhysicalModels</code>: <code>Ψ, ∂Ψ∂F, ∂Ψ∂FF = model()</code>, and the extra arguments of the anisotropic models (the fibre directions);</li><li>the catalogue of 3D hyperelastic models: <code>NeoHookean3D</code>, <code>MooneyRivlin3D</code>, <code>Yeoh3D</code>, <code>EightChain</code>, <code>IncompressibleNeoHookean3D</code>, <code>TransverseIsotropy3D</code>, <code>HGO_1Fiber</code>, <code>HGO_4Fibers</code>, and how to add models with <code>+</code>;</li><li>the kinematics object (<code>Kinematics</code>, <code>get_Kinematics</code>, <code>getIsoInvariants</code>);</li><li>homogeneous tests: the incompressible closed forms and the compressible ones (lateral faces free of traction, found with a scalar Newton iteration that uses the tangent);</li><li>how to verify a model (derivatives, objectivity, stress-free reference state) and how to write your own;</li><li>why the models are fast inside the compiled kernels: they are allocation-free <code>isbits</code> closures.</li></ul><p>Measured on a Mac M5 Max (Julia 1.13.0, 4 Julia threads, 4 BLAS threads; HyperFEM 0.3.0, HyperFEMKernels 0.2.6, Gridap 0.20.8): about 7 s including package loading and compilation; there is no FAST variant (the reduced and the full runs are the same, the computation takes milliseconds). No degrees of freedom: only point evaluations.</p><h2 id="Problem-statement"><a class="docs-heading-anchor" href="#Problem-statement">Problem statement</a><a id="Problem-statement-1"></a><a class="docs-heading-anchor-permalink" href="#Problem-statement" title="Permalink"></a></h2><p>A hyperelastic material is defined by a stored energy per unit reference volume <span>$\Psi(\boldsymbol F)$</span> of the deformation gradient <span>$\boldsymbol F = \boldsymbol I + \nabla_0\boldsymbol u$</span>. The first Piola–Kirchhoff (nominal) stress and the tangent used by Newton&#39;s method are</p><p class="math-container">\[\boldsymbol P = \frac{\partial \Psi}{\partial \boldsymbol F}, \qquad
+\mathbb A = \frac{\partial^2 \Psi}{\partial \boldsymbol F\,\partial \boldsymbol F}, \qquad
+\mathrm d\boldsymbol P = \mathbb A : \mathrm d\boldsymbol F .\]</p><p>Most models are written with the cofactor <span>$\boldsymbol H = J\boldsymbol F^{-T}$</span> and the Jacobian <span>$J = \det\boldsymbol F$</span>, and with the invariants <span>$I_1 = \boldsymbol F:\boldsymbol F$</span> and <span>$I_2 = \boldsymbol H:\boldsymbol H$</span>.</p><p>Homogeneous deformations, with <span>$\boldsymbol e_i$</span> the Cartesian basis:</p><ul><li>uniaxial tension, <span>$\boldsymbol F = \mathrm{diag}(\lambda, \lambda_t, \lambda_t)$</span> with <span>$P_{22} = P_{33} = 0$</span>;</li><li>equibiaxial tension, <span>$\boldsymbol F = \mathrm{diag}(\lambda, \lambda, \lambda_3)$</span> with <span>$P_{33} = 0$</span>;</li><li>simple shear, <span>$\boldsymbol F = \boldsymbol I + \gamma\, \boldsymbol e_1 \otimes \boldsymbol e_2$</span> (<span>$J = 1$</span>).</li></ul><p>For an incompressible material (<span>$J = 1$</span>, <span>$\lambda_t = \lambda^{-1/2}$</span>, <span>$\lambda_3 = \lambda^{-2}$</span>) with <span>$\Psi = W(I_1, I_2)$</span>, <span>$W_1 = \partial W/\partial I_1$</span> and <span>$W_2 = \partial W/\partial I_2$</span>, the nominal stresses are (Ogden, <em>Non-linear elastic deformations</em>, 1984, §7.2)</p><p class="math-container">\[P_{\mathrm{uni}} = 2\left(\lambda - \lambda^{-2}\right)\left(W_1 + \lambda^{-1} W_2\right), \qquad
+P_{\mathrm{equi}} = 2\left(\lambda - \lambda^{-5}\right)\left(W_1 + \lambda^{2} W_2\right), \qquad
+P_{12} = 2\gamma\,(W_1 + W_2).\]</p><p>The models of HyperFEM are compressible: they add volumetric terms of <span>$J$</span> to <span>$W$</span>. At <span>$J = 1$</span> those terms only contribute stresses proportional to <span>$\boldsymbol F^{-T}$</span>, which an incompressible material absorbs in its pressure: <span>$\boldsymbol P = \hat{\boldsymbol P}(\boldsymbol F) - p\,\boldsymbol F^{-T}$</span>, with <span>$p$</span> given by the traction-free lateral faces. That is how the closed forms are checked below.</p><h2 id="Setup"><a class="docs-heading-anchor" href="#Setup">Setup</a><a id="Setup-1"></a><a class="docs-heading-anchor-permalink" href="#Setup" title="Permalink"></a></h2><pre><code class="language-julia hljs">using HyperFEM
+using Gridap
+using LinearAlgebra
+using Printf
+
+const FAST = get(ENV, &quot;HYPERFEM_TUTORIALS_FAST&quot;, &quot;0&quot;) == &quot;1&quot;   # same case in both modes (point evaluations)
+outdir = joinpath(@__DIR__, &quot;..&quot;, &quot;data&quot;, &quot;sims&quot;, &quot;E19_Constitutive_models&quot;)
+setupfolder(outdir)                                            # CSV tables (not versioned)
+
+const e1, e2, e3 = VectorValue(1.0, 0.0, 0.0), VectorValue(0.0, 1.0, 0.0), VectorValue(0.0, 0.0, 1.0)
+diagF(a, b, c) = TensorValue(a, 0.0, 0.0, 0.0, b, 0.0, 0.0, 0.0, c)   # column-major storage</code></pre><h2 id="Kinematics"><a class="docs-heading-anchor" href="#Kinematics">Kinematics</a><a id="Kinematics-1"></a><a class="docs-heading-anchor-permalink" href="#Kinematics" title="Permalink"></a></h2><p><code>Kinematics(Mechano, Solid)</code> holds the maps used by the weak forms: <span>$\boldsymbol F(\nabla\boldsymbol u)$</span>, <span>$\boldsymbol H(\boldsymbol F)$</span> and <span>$J(\boldsymbol F)$</span>. In a weak form they are composed with the FE gradient, <code>F ∘ ∇(u)&#39;</code> (Gridap&#39;s <code>∇(u)</code> is the transpose of <span>$\nabla_0\boldsymbol u$</span>); here we call them with a tensor. <code>getIsoInvariants</code> gives <span>$I_1$</span>, <span>$I_2$</span> and <span>$I_3 = J$</span>.</p><pre><code class="language-julia hljs">kinematics = Kinematics(Mechano, Solid)
+Fmap, Hmap, Jmap = get_Kinematics(kinematics)
+I1map, I2map, I3map = getIsoInvariants(kinematics)
+∇u = TensorValue(0.10, 0.02, 0.00, 0.05, -0.03, 0.01, 0.00, 0.02, 0.04)
+F = Fmap(∇u)
+println(&quot;F = &quot;, F)
+println(&quot;J = &quot;, Jmap(F), &quot;,  I1 = &quot;, I1map(F), &quot;,  I2 = &quot;, I2map(F))
+@assert Fmap(∇u) == one(∇u) + ∇u
+@assert norm(Hmap(F) - det(F) * inv(F)&#39;) &lt; 1e-14 * norm(Hmap(F)) &quot;H is the cofactor J F⁻ᵀ&quot;
+@assert abs(I2map(F) - Hmap(F) ⊙ Hmap(F)) &lt; 1e-14 * I2map(F)</code></pre><h2 id="A-first-model"><a class="docs-heading-anchor" href="#A-first-model">A first model</a><a id="A-first-model-1"></a><a class="docs-heading-anchor-permalink" href="#A-first-model" title="Permalink"></a></h2><p>A model is a struct with its parameters; calling it with no arguments returns three functions of <span>$\boldsymbol F$</span> (closures that capture the parameters). The stress is a <code>TensorValue{3,3}</code> and the tangent a <code>FourthOrderTensorValue{3}</code>, applied to an increment with the double contraction <code>⋅²</code>, as in the jacobian of tutorial 02.</p><pre><code class="language-julia hljs">nh = NeoHookean3D(λ=100.0, μ=1.0)                              # kPa
+Ψ, ∂Ψ∂F, ∂Ψ∂FF = nh()
+println(&quot;Ψ(F) = &quot;, Ψ(F), &quot; kPa&quot;)
+println(&quot;P(F) = &quot;, ∂Ψ∂F(F))
+println(typeof(∂Ψ∂FF(F)))
+dF = 1e-6 * TensorValue(1.0, -2.0, 0.5, 0.3, 1.0, -0.7, 0.2, 0.4, -1.0)
+println(&quot;‖P(F + dF) - P(F) - A:dF‖ / ‖A:dF‖ = &quot;, norm(∂Ψ∂F(F + dF) - ∂Ψ∂F(F) - ∂Ψ∂FF(F) ⋅² dF) / norm(∂Ψ∂FF(F) ⋅² dF))</code></pre><h2 id="The-model-catalogue"><a class="docs-heading-anchor" href="#The-model-catalogue">The model catalogue</a><a id="The-model-catalogue-1"></a><a class="docs-heading-anchor-permalink" href="#The-model-catalogue" title="Permalink"></a></h2><p>The 3D hyperelastic models of HyperFEM 0.3.0 (their code is in HyperFEM&#39;s <code>src/PhysicalModels/MechanicalModels.jl</code>; some, like <code>?Yeoh3D</code> or <code>?EightChain</code>, have docstrings), all with a shear modulus close to 1 kPa and a bulk penalty <span>$\lambda = 100$</span> kPa (nearly incompressible):</p><ul><li><code>NeoHookean3D(λ, μ)</code>: <span>$\tfrac{\mu}{2}(I_1-3) - \mu\ln J + \tfrac{\lambda}{2}(J-1)^2$</span>;</li><li><code>MooneyRivlin3D(λ, μ1, μ2)</code>: <span>$\tfrac{\mu_1}{2}(I_1-3) + \tfrac{\mu_2}{2}(I_2-3) - (\mu_1+2\mu_2)\ln J + \tfrac{\lambda}{2}(J-1)^2$</span>;</li><li><code>Yeoh3D(λ, C10, C20, C30)</code>: <span>$\sum_{k} C_{k0}(I_1-3)^k - 2C_{10}\ln J + \tfrac{\lambda}{2}(J-1)^2$</span>;</li><li><code>EightChain(μ, N)</code>: Arruda–Boyce in the isochoric invariant <span>$\bar I_1 = J^{-2/3} I_1$</span> only, so it needs a volumetric term: here <code>+ VolumetricEnergy(λ)</code>, <span>$\tfrac{\lambda}{2}(J-1)^2$</span>;</li><li><code>IncompressibleNeoHookean3D(λ, μ, δ)</code>: neo-Hookean in <span>$\bar I_1$</span> with a regularised <span>$J$</span> (parameter <span>$\delta$</span>) and a penalty <span>$\lambda$</span>. HyperFEM has no exactly incompressible (mixed <span>$u$</span>–<span>$p$</span>) model: incompressibility is always a penalty;</li><li>fibre models, functions of <span>$(\boldsymbol F, \boldsymbol N)$</span> with <span>$\boldsymbol N$</span> the fibre direction in the reference configuration: <code>TransverseIsotropy3D(μ, α1, α2)</code>, polyconvex in <span>$I_4 = |\boldsymbol F\boldsymbol N|^2$</span> and <span>$I_5 = |\boldsymbol H\boldsymbol N|^2$</span>, and the Holzapfel–Gasser–Ogden fibre energy <code>HGO_1Fiber(c1, c2)</code>, <span>$\tfrac{c_1}{4c_2}\left(e^{c_2(I_4-1)^2}-1\right)$</span> (<code>HGO_4Fibers</code> has four families). They have no volumetric term of their own and are added to an isotropic matrix.</li></ul><p><strong>Adding models.</strong> <code>+</code> composes an isotropic model with another isotropic one (the result is isotropic) or with an anisotropic one (the result takes the fibre directions as extra arguments). <code>Gent</code> exists only in 2D (<code>Gent2D</code>, plane strain); a 3D Gent model is written below as the example of a user model.</p><pre><code class="language-julia hljs">const N_fibre = e1                                             # fibres along the loading direction
+const N4 = (e1, VectorValue(0.0, 1.0, 1.0), VectorValue(1.0, 1.0, 0.0), VectorValue(1.0, 0.0, 1.0))</code></pre><h2 id="Writing-your-own-model"><a class="docs-heading-anchor" href="#Writing-your-own-model">Writing your own model</a><a id="Writing-your-own-model-1"></a><a class="docs-heading-anchor-permalink" href="#Writing-your-own-model" title="Permalink"></a></h2><p>A model is any subtype of <code>Mechano</code> callable with no arguments that returns <code>(Ψ, ∂Ψ∂F, ∂Ψ∂FF)</code>. That is all that <code>residual</code>, <code>jacobian</code> and <code>energy</code> use, so the new model works in every mechanical tutorial (02, 03, 13–15). Subtyping the (non-exported) <code>HyperFEM.PhysicalModels.IsoElastic</code> instead also enables <code>+</code> with the other models.</p><p>The compressible Gent model in 3D, with <span>$J_m$</span> the limit of <span>$I_1 - 3$</span> (finite extensibility):</p><p class="math-container">\[\Psi = -\frac{\mu J_m}{2}\ln\left(1 - \frac{I_1-3}{J_m}\right) - \mu\ln J + \frac{\lambda}{2}(J-1)^2 ,
+\qquad \boldsymbol P = \frac{\mu}{g}\boldsymbol F + \Psi_J \boldsymbol H ,
+\qquad g = 1 - \frac{I_1-3}{J_m}, \quad \Psi_J = -\frac{\mu}{J} + \lambda (J-1),\]</p><p class="math-container">\[\mathbb A = \frac{\mu}{g}\,\mathbb I + \frac{2\mu}{J_m g^2}\,\boldsymbol F\otimes\boldsymbol F
+  + \left(\frac{\mu}{J^2} + \lambda\right)\boldsymbol H\otimes\boldsymbol H + \Psi_J\,\frac{\partial\boldsymbol H}{\partial\boldsymbol F} .\]</p><p><code>𝕀3D</code> is the fourth-order identity and <code>×ᵢ⁴(F)</code> is <span>$\partial\boldsymbol H/\partial\boldsymbol F$</span> (both exported by HyperFEM). The three functions read only their argument and the parameters captured from the struct, never a non-constant global variable (a non-constant global has an unknown type, so every call that reads it is resolved at run time and is many times slower); so they compile to allocation-free code.</p><pre><code class="language-julia hljs">struct Gent3D &lt;: HyperFEM.PhysicalModels.IsoElastic
+  μ::Float64
+  Jm::Float64
+  λ::Float64
+end
+Gent3D(; μ::Float64, Jm::Float64, λ::Float64) = Gent3D(μ, Jm, λ)
+
+function (obj::Gent3D)()
+  μ, Jm, λ = obj.μ, obj.Jm, obj.λ
+  J(F) = det(F)
+  H(F) = det(F) * inv(F)&#39;
+  g(F) = 1.0 - (tr(F&#39; * F) - 3.0) / Jm
+  ΨJ(F) = -μ / J(F) + λ * (J(F) - 1.0)
+  Ψ(F) = -0.5 * μ * Jm * log(g(F)) - μ * log(J(F)) + 0.5 * λ * (J(F) - 1.0)^2
+  ∂Ψ∂F(F) = (μ / g(F)) * F + ΨJ(F) * H(F)
+  ∂Ψ∂FF(F) = (μ / g(F)) * 𝕀3D + (2.0 * μ / (Jm * g(F)^2)) * (F ⊗ F) +
+             (μ / J(F)^2 + λ) * (H(F) ⊗ H(F)) + ΨJ(F) * ×ᵢ⁴(F)
+  return (Ψ, ∂Ψ∂F, ∂Ψ∂FF)
+end</code></pre><p>A second user model: a fibre-reinforced material that adds an isotropic matrix and a fibre model, like <code>+</code>, but with the types of both parts as parameters of the struct and with the fibre arguments declared as <code>Vararg{Any,K}</code>. That declaration makes Julia compile one method per number of fibres; the reason is explained in the Efficiency section.</p><pre><code class="language-julia hljs">struct FibreReinforced{M&lt;:Mechano,A&lt;:Mechano} &lt;: Mechano
+  matrix::M
+  fibres::A
+end
+
+function (obj::FibreReinforced)()
+  Ψm, Pm, Am = obj.matrix()
+  Ψf, Pf, Af = obj.fibres()
+  Ψ(F, N::Vararg{Any,K}) where {K} = Ψm(F) + Ψf(F, N...)
+  ∂Ψ∂F(F, N::Vararg{Any,K}) where {K} = Pm(F) + Pf(F, N...)
+  ∂Ψ∂FF(F, N::Vararg{Any,K}) where {K} = Am(F) + Af(F, N...)
+  return (Ψ, ∂Ψ∂F, ∂Ψ∂FF)
+end</code></pre><p>The models of this tutorial: a name, the model and the extra arguments of its functions (the fibres).</p><pre><code class="language-julia hljs">models = [
+  (name=&quot;NeoHookean3D&quot;,       model=nh,                                                      args=()),
+  (name=&quot;MooneyRivlin3D&quot;,     model=MooneyRivlin3D(λ=100.0, μ1=0.7, μ2=0.3),                 args=()),
+  (name=&quot;Yeoh3D&quot;,             model=Yeoh3D(λ=100.0, C10=0.5, C20=0.02, C30=0.001),            args=()),
+  (name=&quot;EightChain+Vol&quot;,     model=EightChain(μ=1.0, N=8.0) + VolumetricEnergy(λ=100.0),    args=()),
+  (name=&quot;IncompNeoHookean3D&quot;, model=IncompressibleNeoHookean3D(λ=100.0, μ=1.0),             args=()),
+  (name=&quot;Gent3D (user)&quot;,      model=Gent3D(μ=1.0, Jm=20.0, λ=100.0),                         args=()),
+  (name=&quot;NH+TransvIso&quot;,       model=nh + TransverseIsotropy3D(μ=0.5, α1=1.5, α2=1.3),        args=(N_fibre,)),
+  (name=&quot;NH+HGO_1Fiber&quot;,      model=nh + HGO_1Fiber(c1=1.0, c2=0.2),                         args=(N_fibre,)),
+  (name=&quot;NH+HGO_4Fibers&quot;,     model=nh + HGO_4Fibers(c1=[2.0, 1.0, 1.0, 1.0], c2=[0.5, 0.5, 0.5, 0.5]), args=N4),
+  (name=&quot;FibreReinforced&quot;,    model=FibreReinforced(nh, HGO_4Fibers(c1=[2.0, 1.0, 1.0, 1.0], c2=[0.5, 0.5, 0.5, 0.5])), args=N4),
+]</code></pre><h2 id="Homogeneous-tests"><a class="docs-heading-anchor" href="#Homogeneous-tests">Homogeneous tests</a><a id="Homogeneous-tests-1"></a><a class="docs-heading-anchor-permalink" href="#Homogeneous-tests" title="Permalink"></a></h2><p>For a compressible model the lateral stretch is unknown. The scalar equation <span>$P_{22}(\lambda_t) = 0$</span> is solved by Newton&#39;s method with the model&#39;s own tangent, <span>$\mathrm dP_{22}/\mathrm d\lambda_t = [\mathbb A : (\boldsymbol e_2\otimes\boldsymbol e_2 + \boldsymbol e_3\otimes\boldsymbol e_3)]_{22}$</span>; for the equibiaxial test the unknown is <span>$\lambda_3$</span> and the equation <span>$P_{33} = 0$</span>. The fibres of the anisotropic models are along <span>$\boldsymbol e_1$</span>, so <span>$\lambda_2 = \lambda_3$</span> still holds in uniaxial tension (with four fibre families it does not: those models are only used in the checks).</p><pre><code class="language-julia hljs">function lateral_newton(∂Ψ∂F, ∂Ψ∂FF, Fof, dFda, i, a, args; tol=1e-13, maxiter=30)
+  for _ in 1:maxiter
+    F = Fof(a)
+    r = ∂Ψ∂F(F, args...)[i, i]
+    abs(r) &lt; tol &amp;&amp; return a, F
+    a -= r / (∂Ψ∂FF(F, args...) ⋅² dFda)[i, i]
+  end
+  error(&quot;lateral equilibrium did not converge&quot;)
+end
+
+uniaxial(∂Ψ∂F, ∂Ψ∂FF, λ, args) = lateral_newton(∂Ψ∂F, ∂Ψ∂FF, a -&gt; diagF(λ, a, a), e2 ⊗ e2 + e3 ⊗ e3, 2, 1 / sqrt(λ), args)
+equibiaxial(∂Ψ∂F, ∂Ψ∂FF, λ, args) = lateral_newton(∂Ψ∂F, ∂Ψ∂FF, a -&gt; diagF(λ, λ, a), e3 ⊗ e3, 3, 1 / λ^2, args)
+shearF(γ) = one(TensorValue{3,3,Float64}) + γ * (e1 ⊗ e2)
+
+stretches = collect(1.0:0.1:2.0)
+shears = collect(0.0:0.1:1.0)
+iso_models = filter(m -&gt; length(m.args) &lt;= 1, models)    # the four-fibre models are only checked
+table_uni = zeros(length(stretches), length(iso_models))
+table_lat = zeros(length(stretches), length(iso_models))
+table_equi = zeros(length(stretches), length(iso_models))
+table_shear = zeros(length(shears), length(iso_models))
+for (j, m) in enumerate(iso_models)
+  _, Pm, Am = m.model()
+  for (k, λ) in enumerate(stretches)
+    λt, Fu = uniaxial(Pm, Am, λ, m.args)
+    table_uni[k, j] = Pm(Fu, m.args...)[1, 1]
+    table_lat[k, j] = λt
+    _, Fe = equibiaxial(Pm, Am, λ, m.args)
+    table_equi[k, j] = Pm(Fe, m.args...)[1, 1]
+  end
+  for (k, γ) in enumerate(shears)
+    table_shear[k, j] = Pm(shearF(γ), m.args...)[1, 2]
+  end
+end
+
+function print_table(title, xname, x, T, names)
+  println(&quot;\n&quot;, title)
+  @printf(&quot;%6s&quot;, xname)
+  foreach(n -&gt; @printf(&quot; %19s&quot;, n), names)
+  println()
+  for k in eachindex(x)
+    @printf(&quot;%6.2f&quot;, x[k])
+    foreach(v -&gt; @printf(&quot; %19.6f&quot;, v), T[k, :])
+    println()
+  end
+end
+function write_csv(file, xname, x, T, names)
+  open(joinpath(outdir, file), &quot;w&quot;) do io
+    println(io, join([xname; names], &quot;,&quot;))
+    for k in eachindex(x)
+      println(io, join(string.([x[k]; T[k, :]]), &quot;,&quot;))
+    end
+  end
+end
+colnames = [m.name for m in iso_models]
+print_table(&quot;Uniaxial tension, lateral faces free: nominal stress P11 (kPa)&quot;, &quot;λ&quot;, stretches, table_uni, colnames)
+print_table(&quot;Equibiaxial tension, P33 = 0: nominal stress P11 (kPa)&quot;, &quot;λ&quot;, stretches, table_equi, colnames)
+print_table(&quot;Simple shear: nominal shear stress P12 (kPa)&quot;, &quot;γ&quot;, shears, table_shear, colnames)</code></pre><p>Reading the tables: all the isotropic models share the initial slope (<span>$3\mu$</span> in uniaxial tension, <span>$6\mu$</span> in equibiaxial tension and <span>$\mu$</span> in shear, with <span>$\mu = 1$</span> kPa) and differ at large stretch: Mooney–Rivlin softens in uniaxial tension and stiffens in equibiaxial tension, Yeoh, Gent and the eight-chain model stiffen. The fibre models are much stiffer along the fibre; in simple shear the fibre <span>$\boldsymbol N = \boldsymbol e_1$</span> is not stretched (<span>$\boldsymbol F\boldsymbol e_1 = \boldsymbol e_1$</span>), so <code>HGO_1Fiber</code> adds nothing, whereas <code>TransverseIsotropy3D</code> does, through <span>$I_5$</span>.</p><pre><code class="language-julia hljs">write_csv(&quot;uniaxial_P11.csv&quot;, &quot;stretch&quot;, stretches, table_uni, colnames)
+write_csv(&quot;uniaxial_lateral_stretch.csv&quot;, &quot;stretch&quot;, stretches, table_lat, colnames)
+write_csv(&quot;equibiaxial_P11.csv&quot;, &quot;stretch&quot;, stretches, table_equi, colnames)
+write_csv(&quot;simple_shear_P12.csv&quot;, &quot;gamma&quot;, shears, table_shear, colnames)</code></pre><h2 id="Checks"><a class="docs-heading-anchor" href="#Checks">Checks</a><a id="Checks-1"></a><a class="docs-heading-anchor-permalink" href="#Checks" title="Permalink"></a></h2><p><strong>(a) Closed forms.</strong> Incompressible tests: the model is evaluated at the isochoric <span>$\boldsymbol F$</span> and the pressure <span>$p$</span> is eliminated with the traction-free lateral faces. The derivatives <span>$W_1$</span>, <span>$W_2$</span> of the isochoric part of each model are written by hand (neo-Hookean <span>$W_1 = \mu/2$</span>; Mooney–Rivlin <span>$W_1 = \mu_1/2$</span>, <span>$W_2 = \mu_2/2$</span>; Yeoh <span>$W_1 = C_{10} + 2C_{20}(I_1-3) + 3C_{30}(I_1-3)^2$</span>; Gent <span>$W_1 = \mu/(2g)$</span>).</p><pre><code class="language-julia hljs">function incompressible_uniaxial(P, λ)
+  s = 1 / sqrt(λ)
+  P̂ = P(diagF(λ, s, s))
+  p = P̂[2, 2] * s                                              # P22 = P̂22 - p/s = 0
+  P̂[1, 1] - p / λ
+end
+function incompressible_equibiaxial(P, λ)
+  s = 1 / λ^2
+  P̂ = P(diagF(λ, λ, s))
+  p = P̂[3, 3] * s
+  P̂[1, 1] - p / λ
+end
+incompressible_shear(P, γ) = P(shearF(γ))[1, 2]                # F⁻ᵀ has no 12 component: p does not enter
+
+closed_forms = [
+  (&quot;NeoHookean3D&quot;,   NeoHookean3D(λ=100.0, μ=1.0),                    (I1, I2) -&gt; (0.5, 0.0)),
+  (&quot;MooneyRivlin3D&quot;, MooneyRivlin3D(λ=100.0, μ1=0.7, μ2=0.3),         (I1, I2) -&gt; (0.35, 0.15)),
+  (&quot;Yeoh3D&quot;,         Yeoh3D(λ=100.0, C10=0.5, C20=0.02, C30=0.001),    (I1, I2) -&gt; (0.5 + 0.04 * (I1 - 3) + 0.003 * (I1 - 3)^2, 0.0)),
+  (&quot;Gent3D (user)&quot;,  Gent3D(μ=1.0, Jm=20.0, λ=100.0),                  (I1, I2) -&gt; (0.5 / (1 - (I1 - 3) / 20.0), 0.0)),
+]
+max_err_a = 0.0
+for (name, model, W) in closed_forms
+  _, Pm, _ = model()
+  err = 0.0
+  for λ in stretches[2:end]
+    W1, W2 = W(λ^2 + 2 / λ, 2λ + 1 / λ^2)
+    Pex = 2 * (λ - λ^-2) * (W1 + W2 / λ)
+    err = max(err, abs(incompressible_uniaxial(Pm, λ) - Pex) / abs(Pex))
+    W1, W2 = W(2λ^2 + λ^-4, λ^4 + 2 / λ^2)
+    Pex = 2 * (λ - λ^-5) * (W1 + λ^2 * W2)
+    err = max(err, abs(incompressible_equibiaxial(Pm, λ) - Pex) / abs(Pex))
+  end
+  for γ in shears[2:end]
+    W1, W2 = W(3 + γ^2, 3 + γ^2)
+    Pex = 2γ * (W1 + W2)
+    err = max(err, abs(incompressible_shear(Pm, γ) - Pex) / abs(Pex))
+  end
+  @printf(&quot;closed forms, %-15s max relative error %.2e\n&quot;, name, err)
+  global max_err_a = max(max_err_a, err)
+end
+@assert max_err_a &lt; 1e-10 &quot;incompressible closed forms not reproduced (max error $max_err_a)&quot;</code></pre><p>The compressible neo-Hookean in uniaxial tension also has a closed form (tutorial 02): <span>$J$</span> is the positive root of <span>$\lambda J^2 - (\lambda - \mu/\lambda_1)J - \mu = 0$</span> and <span>$P_{11} = \mu(\lambda_1 - J/\lambda_1^2)$</span>. The nearly incompressible models are close to the incompressible curve: the difference is of order <span>$\mu/\lambda$</span>.</p><pre><code class="language-julia hljs">J_nh(λ₁; λ=100.0, μ=1.0) = ((λ - μ / λ₁) + sqrt((λ - μ / λ₁)^2 + 4λ * μ)) / (2λ)
+P11_nh(λ₁; μ=1.0) = μ * (λ₁ - J_nh(λ₁) / λ₁^2)
+err_nh = maximum(abs.(table_uni[2:end, 1] .- P11_nh.(stretches[2:end])) ./ P11_nh.(stretches[2:end]))
+println(&quot;compressible neo-Hookean, uniaxial: max relative error $(@sprintf(&quot;%.2e&quot;, err_nh))&quot;)
+@assert err_nh &lt; 1e-10 &quot;compressible neo-Hookean uniaxial curve away from the closed form&quot;
+gap = maximum(abs.(table_uni[2:end, 1] .- 1.0 .* (stretches[2:end] .- stretches[2:end] .^ -2)) ./ table_uni[2:end, 1])
+println(&quot;compressible (λ = 100 μ) vs incompressible neo-Hookean, uniaxial: max relative difference $(@sprintf(&quot;%.2e&quot;, gap))&quot;)
+@assert gap &lt; 0.05</code></pre><p><strong>(b) Invariants of every model.</strong> At three states (small strain, large strain, compression), the stress must be the derivative of the energy and the tangent the derivative of the stress. Both are checked against central finite differences with Richardson extrapolation along the nine directions <span>$\boldsymbol e_i\otimes\boldsymbol e_j$</span> (relative error of the whole Jacobian, tolerance 1e-6). Also: the tangent has the major symmetry of a second derivative; the energy is objective, <span>$\Psi(\boldsymbol Q\boldsymbol F) = \Psi(\boldsymbol F)$</span> and <span>$\boldsymbol P(\boldsymbol Q\boldsymbol F) = \boldsymbol Q\boldsymbol P(\boldsymbol F)$</span> for a rotation <span>$\boldsymbol Q$</span> (the fibres are referential); and the reference state is free of energy and stress.</p><pre><code class="language-julia hljs">const Fs = (small=one(TensorValue{3,3,Float64}) + 1e-3 * TensorValue(1.0:9.0...),
+            large=TensorValue(1.3, 0.1, 0.0, 0.2, 0.9, -0.1, 0.0, 0.15, 1.1),
+            compression=TensorValue(0.5, 0.02, 0.0, 0.01, 0.6, 0.0, 0.0, 0.03, 0.67))
+const Ebasis = ntuple(m -&gt; TensorValue(ntuple(n -&gt; n == m ? 1.0 : 0.0, 9)), 9)
+const Q = let a = VectorValue(1.0, 2.0, 3.0) / sqrt(14.0), θ = 0.7     # rotation (Rodrigues)
+  K = TensorValue(0.0, a[3], -a[2], -a[3], 0.0, a[1], a[2], -a[1], 0.0)
+  one(K) + sin(θ) * K + (1 - cos(θ)) * (K ⋅ K)
+end
+
+function fd(f, F, dF; h=1e-4)                                  # Richardson-extrapolated central difference
+  d(δ) = (f(F + δ * dF) - f(F - δ * dF)) / (2δ)
+  (4 * d(h / 2) - d(h)) / 3
+end
+function derivative_errors(Ψ, P, A, F, args)
+  eP = eA = nP = nA = 0.0
+  for E in Ebasis
+    dΨ = fd(G -&gt; Ψ(G, args...), F, E)
+    eP += (P(F, args...) ⊙ E - dΨ)^2
+    nP += dΨ^2
+    dP = fd(G -&gt; P(G, args...), F, E)
+    eA += norm(A(F, args...) ⋅² E - dP)^2
+    nA += norm(dP)^2
+  end
+  sqrt(eP / nP), sqrt(eA / nA)
+end
+function symmetry_error(A, F, args)
+  B, C = TensorValue(1.0:9.0...), TensorValue(0.3, -1.0, 2.0, 0.5, 0.1, -0.4, 1.5, 0.2, -0.6)
+  AF = A(F, args...)
+  abs(C ⊙ (AF ⋅² B) - B ⊙ (AF ⋅² C)) / abs(C ⊙ (AF ⋅² B))
+end
+
+println(&quot;\nmodel                 P vs dΨ/dF   A vs dP/dF   A symmetry   objectivity  Ψ(I), |P(I)|&quot;)
+for m in models
+  Ψm, Pm, Am = m.model()
+  eP = eA = es = eo = 0.0
+  for (state, Fm) in pairs(Fs)
+    a, b = derivative_errors(Ψm, Pm, Am, Fm, m.args)
+    eP, eA = max(eP, a), max(eA, b)
+    es = max(es, symmetry_error(Am, Fm, m.args))
+    state == :small &amp;&amp; continue                                # Ψ ≈ 1e-6: relative round-off too large
+    eo = max(eo, abs(Ψm(Q ⋅ Fm, m.args...) - Ψm(Fm, m.args...)) / abs(Ψm(Fm, m.args...)),
+                 norm(Pm(Q ⋅ Fm, m.args...) - Q ⋅ Pm(Fm, m.args...)) / norm(Pm(Fm, m.args...)))
+  end
+  Id = one(TensorValue{3,3,Float64})
+  rest = max(abs(Ψm(Id, m.args...)), norm(Pm(Id, m.args...)))
+  @printf(&quot;%-20s  %.2e     %.2e     %.2e     %.2e     %.2e\n&quot;, m.name, eP, eA, es, eo, rest)
+  @assert eP &lt; 1e-6 &quot;$(m.name): stress is not the derivative of the energy ($eP)&quot;
+  @assert eA &lt; 1e-6 &quot;$(m.name): tangent is not the derivative of the stress ($eA)&quot;
+  @assert es &lt; 1e-12 &quot;$(m.name): tangent without major symmetry ($es)&quot;
+  @assert eo &lt; 1e-12 &quot;$(m.name): not objective ($eo)&quot;
+  @assert rest &lt; 1e-12 &quot;$(m.name): energy or stress at F = I ($rest)&quot;
+end</code></pre><p>The user composition <code>FibreReinforced</code> and the library&#39;s <code>+</code> are the same material:</p><pre><code class="language-julia hljs">let (Ψa, Pa, Aa) = models[end-1].model(), (Ψb, Pb, Ab) = models[end].model(), F = Fs.large
+  @assert Ψa(F, N4...) ≈ Ψb(F, N4...) &amp;&amp; Pa(F, N4...) ≈ Pb(F, N4...) &amp;&amp; Aa(F, N4...) ≈ Ab(F, N4...)
+end</code></pre><p><strong>(c) Regression values</strong> (HyperFEM 0.3.0, HyperFEMKernels 0.2.6, Gridap 0.20.8, Julia 1.13.0, macOS arm64): the nominal stress at <span>$\lambda = 2$</span> in uniaxial tension with free lateral faces. Point arithmetic without BLAS: the tolerance is tighter than in the FE tutorials.</p><pre><code class="language-julia hljs">P11_ref = Dict(&quot;NeoHookean3D&quot; =&gt; 1.748762315869, &quot;MooneyRivlin3D&quot; =&gt; 1.487635363752,
+               &quot;Yeoh3D&quot; =&gt; 2.071539451067, &quot;EightChain+Vol&quot; =&gt; 1.844431004853,
+               &quot;IncompNeoHookean3D&quot; =&gt; 1.731210061009, &quot;Gent3D (user)&quot; =&gt; 1.943697469481,
+               &quot;NH+TransvIso&quot; =&gt; 3.705533075008, &quot;NH+HGO_1Fiber&quot; =&gt; 38.046647102346)
+for (j, m) in enumerate(iso_models)
+  @printf(&quot;%-20s  P11(λ = 2) = %.12f kPa   λt = %.12f\n&quot;, m.name, table_uni[end, j], table_lat[end, j])
+  @assert isapprox(table_uni[end, j], P11_ref[m.name]; rtol=1e-8) &quot;$(m.name): regression value&quot;
+end</code></pre><h2 id="Efficiency"><a class="docs-heading-anchor" href="#Efficiency">Efficiency</a><a id="Efficiency-1"></a><a class="docs-heading-anchor-permalink" href="#Efficiency" title="Permalink"></a></h2><p>The FE forms call these functions at every quadrature point (<code>∂Ψ∂F ∘ (F ∘ ∇(u)&#39;, args...)</code>), and the compiled backend of HyperFEMKernels captures the forms, closures included, in type-specialised loops. That is fast because a model is an immutable struct of numbers and its functions are closures over those numbers: <code>isbits</code> values that the compiler inlines, with no heap allocation per evaluation. The check below measures the allocations of one stress and one tangent evaluation after compilation (in a function, so that the measurement does not include the dynamic call from global scope) and the time per evaluation. Both are printed, not asserted: whether a closure is inlined depends on the compiler&#39;s heuristics, which change between Julia versions and platforms (the table below was measured with Julia 1.13 on macOS arm64), so a zero-allocation assertion could fail on another machine for reasons that have nothing to do with the model. Composite models (<code>+</code>) and <code>HGO_4Fibers</code>, whose parameters are <code>Vector</code>s, are not <code>isbits</code> structs, but their stress functions still do not allocate, with one exception (measured).</p><p><strong>The exception: <code>+</code> with four fibre families.</strong> In HyperFEM 0.3.0, <code>nh + HGO_4Fibers(...)</code> allocates at every evaluation: 720 bytes per stress and 1920 bytes per tangent, and its tangent takes about twice as long as that of the same material written as <code>FibreReinforced</code> (663 ns against 327 ns in our measurement). This is a known issue of the library, and a fix is pending in HyperFEM; the model is correct (it passes every check above) and remains a valid choice. <code>+</code> builds <code>(F, N...) -&gt; Ψ1(F) + Ψ2(F, N...)</code>, and Julia does not specialise a function on a <code>Vararg</code> argument that it only passes on to another function (Julia manual, Performance tips, «Be aware of when Julia avoids specializing»): the call with four fibres goes through a generic method. With one fibre the compiler still inlines it. The lesson for your own models is in <code>FibreReinforced</code> above: declaring <code>N::Vararg{Any,K}</code> forces the specialisation, with the same energy and stresses and no allocation. Writing the sum of the two models with explicit arguments has the same effect.</p><pre><code class="language-julia hljs">function allocations(f, F, args)
+  f(F, args...)
+  @allocated f(F, args...)
+end
+function ns_per_eval(f, F, args; n=200_000)
+  s = 0.0
+  f(F, args...)
+  t = @elapsed for i in 1:n
+    s += first(Tuple(f(F + (1e-12 * i) * one(F), args...)))
+  end
+  1e9 * t / n, s
+end
+println(&quot;\nmodel                 isbits(model)  isbits(P)  alloc P  alloc A   ns/P    ns/A&quot;)
+for m in models
+  _, Pm, Am = m.model()
+  aP, aA = allocations(Pm, Fs.large, m.args), allocations(Am, Fs.large, m.args)
+  tP, _ = ns_per_eval(Pm, Fs.large, m.args)
+  tA, _ = ns_per_eval(Am, Fs.large, m.args)
+  @printf(&quot;%-20s  %-13s  %-9s  %7d  %7d  %6.1f  %6.1f\n&quot;, m.name, isbits(m.model), isbits(Pm), aP, aA, tP, tA)
+end</code></pre><h2 id="Going-further"><a class="docs-heading-anchor" href="#Going-further">Going further</a><a id="Going-further-1"></a><a class="docs-heading-anchor-permalink" href="#Going-further" title="Permalink"></a></h2><ul><li><code>SecondPiola(model)</code> gives <span>$\Psi$</span>, <span>$\boldsymbol S$</span> and <span>$\partial\boldsymbol S/\partial\boldsymbol C$</span> as functions of <span>$\boldsymbol C = \boldsymbol F^T\boldsymbol F$</span> for the models that implement it (<code>IsochoricNeoHookean3D</code> in 0.3.0).</li><li>Coupled models follow the same pattern with more arguments: <code>ElectroMechModel</code> returns derivatives with respect to <span>$(\boldsymbol F, \boldsymbol E)$</span> (tutorials 04 and 05), <code>MagnetoMechModel</code> with respect to <span>$(\boldsymbol F, \boldsymbol{\mathcal H})$</span> (tutorials 08 and 09), and the viscous models take the previous deformation and an internal variable (tutorial 16).</li><li>Put the user model in a simulation: replace <code>NeoHookean3D</code> by <code>Gent3D(μ=1.0, Jm=20.0, λ=100.0)</code> in tutorial 02; for a homogeneous bar the force–stretch curve is the uniaxial column above.</li><li>The derivative checks of the library itself are in HyperFEM&#39;s <code>test/ConstitutiveModelsTests/DerivativeConsistencyTests.jl</code>.</li></ul></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../E03_Fibre_reinforced_cylinder/">« 03 · Fibre-reinforced cylinder under internal pressure</a><a class="docs-footer-nextpage" href="../E04_ElectroMechanics/">04 · Electro-mechanics of a dielectric elastomer »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.20.0 on <span class="colophon-date" title="Monday 23 November 2026 08:44">Monday 23 November 2026</span>. Using Julia version 1.13.4.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
