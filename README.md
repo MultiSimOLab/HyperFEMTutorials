@@ -2,8 +2,8 @@
 
 # HyperFEM tutorials
 
-[![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://multisimolab.github.io/HyperFEMTutorials.jl/dev/)
-[![CI](https://github.com/MultiSimOLab/HyperFEMTutorials.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/MultiSimOLab/HyperFEMTutorials.jl/actions/workflows/CI.yml?query=branch%3Amain)
+[![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://multisimolab.github.io/HyperFEMTutorials/dev/)
+[![CI](https://github.com/MultiSimOLab/HyperFEMTutorials/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/MultiSimOLab/HyperFEMTutorials/actions/workflows/CI.yml?query=branch%3Amain)
 
 Tutorials of [HyperFEM.jl](https://github.com/MultiSimOLab/HyperFEM.jl), a library of the
 [Gridap](https://github.com/gridap/Gridap.jl) ecosystem for the finite-element simulation of multiphysics problems with
@@ -11,7 +11,7 @@ hyperelastic materials: thermo-, electro- and magneto-mechanics at finite strain
 and solvers for large systems.
 
 Every tutorial is a self-contained Julia script in [`src/`](src/). The
-[documentation](https://multisimolab.github.io/HyperFEMTutorials.jl/dev/) turns each one into a page that explains the
+[documentation](https://multisimolab.github.io/HyperFEMTutorials/dev/) turns each one into a page that explains the
 problem, the equations and every step of the code, with a Jupyter notebook generated from the same script. Each script
 ends with quantitative checks of its result (exact solutions, published benchmarks, conservation laws), which are also
 the test suite of this repository.
@@ -21,8 +21,8 @@ the test suite of this repository.
 Julia 1.12 or later is needed. Clone the repository and install the dependencies (HyperFEM 0.3, HyperFEMKernels 0.2.6, Gridap 0.20.8, …):
 
 ```
-git clone https://github.com/MultiSimOLab/HyperFEMTutorials.jl.git
-cd HyperFEMTutorials.jl
+git clone https://github.com/MultiSimOLab/HyperFEMTutorials.git
+cd HyperFEMTutorials
 julia --project=. -e 'using Pkg; Pkg.instantiate()'
 ```
 
@@ -81,7 +81,7 @@ julia -t 4 --project=. -e 'using Pkg; Pkg.test()'
 
 runs every tutorial in its reduced case. `HYPERFEM_TUTORIALS_GROUP` (`basics`, `coupled`, `contact`, `fluids`,
 `solvers`, `dynamics`) and `HYPERFEM_TUTORIALS_ONLY` (e.g. `E02,E10`) select tutorials; `HYPERFEM_TUTORIALS_PETSC=0`
-skips the parts that use PETSc. See [Running and testing](https://multisimolab.github.io/HyperFEMTutorials.jl/dev/running/).
+skips the parts that use PETSc. See [Running and testing](https://multisimolab.github.io/HyperFEMTutorials/dev/running/).
 
 ## How to cite
 

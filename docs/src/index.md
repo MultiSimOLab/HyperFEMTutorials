@@ -5,7 +5,7 @@ Tutorials of [HyperFEM.jl](https://github.com/MultiSimOLab/HyperFEM.jl), a libra
 hyperelastic materials: thermo-, electro- and magneto-mechanics at finite strains, contact, fluids, transient
 problems and solvers for large systems.
 
-Every tutorial is a self-contained Julia script in the [`src/`](https://github.com/MultiSimOLab/HyperFEMTutorials.jl/tree/main/src)
+Every tutorial is a self-contained Julia script in the [`src/`](https://github.com/MultiSimOLab/HyperFEMTutorials/tree/main/src)
 folder of the repository. Its page explains the problem, the equations and every step of the code, and links to a
 Jupyter notebook generated from the same script. Each script ends with quantitative checks of its result (exact
 solutions, published benchmarks, conservation laws), which are also the test suite of the repository.
@@ -13,8 +13,8 @@ solutions, published benchmarks, conservation laws), which are also the test sui
 ## Getting started
 
 ```
-git clone https://github.com/MultiSimOLab/HyperFEMTutorials.jl.git
-cd HyperFEMTutorials.jl
+git clone https://github.com/MultiSimOLab/HyperFEMTutorials.git
+cd HyperFEMTutorials
 julia --project=. -e 'using Pkg; Pkg.instantiate()'
 julia -t 4 --project=. src/E02_Hyperelastic_stretch.jl
 ```

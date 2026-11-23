@@ -9,9 +9,9 @@ const ROOT = dirname(@__DIR__)
 include(joinpath(ROOT, "src", "HyperFEMTutorials.jl"))
 using .HyperFEMTutorials: TUTORIALS
 
-const REPO = "https://github.com/MultiSimOLab/HyperFEMTutorials.jl"
-const SITE = "https://multisimolab.github.io/HyperFEMTutorials.jl/dev"
-const NBVIEWER = "https://nbviewer.org/urls/multisimolab.github.io/HyperFEMTutorials.jl/dev/notebooks"
+const REPO = "https://github.com/MultiSimOLab/HyperFEMTutorials"
+const SITE = "https://multisimolab.github.io/HyperFEMTutorials/dev"
+const NBVIEWER = "https://nbviewer.org/urls/multisimolab.github.io/HyperFEMTutorials/dev/notebooks"
 
 available = filter(t -> isfile(joinpath(ROOT, "src", t.file)), TUTORIALS)
 stem(t) = splitext(t.file)[1]
@@ -52,7 +52,7 @@ push!(pages, "Running and testing" => "running.md")
 makedocs(;
   sitename = "HyperFEM tutorials",
   authors = "MultiSimOLab",
-  repo = Remotes.GitHub("MultiSimOLab", "HyperFEMTutorials.jl"),
+  repo = Remotes.GitHub("MultiSimOLab", "HyperFEMTutorials"),
   format = Documenter.HTML(; prettyurls = get(ENV, "CI", "false") == "true", canonical = SITE,
                            edit_link = "main", size_threshold_warn = 400 * 2^10, size_threshold = 800 * 2^10,
                            mathengine = Documenter.MathJax3()),
@@ -61,4 +61,4 @@ makedocs(;
   checkdocs = :none,
 )
 
-deploydocs(; repo = "github.com/MultiSimOLab/HyperFEMTutorials.jl.git", devbranch = "main", push_preview = false)
+deploydocs(; repo = "github.com/MultiSimOLab/HyperFEMTutorials.git", devbranch = "main", push_preview = false)
