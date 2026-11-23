@@ -1,9 +1,9 @@
 cff-version: 1.2.0
 message: "If you use HyperFEM or these tutorials, please cite the article below and Gridap."
-title: "HyperFEMTutorials.jl: tutorials of HyperFEM.jl"
+title: "HyperFEMTutorials: tutorials of HyperFEM.jl"
 authors:
   - name: MultiSimOLab
-repository-code: "https://github.com/MultiSimOLab/HyperFEMTutorials.jl"
+repository-code: "https://github.com/MultiSimOLab/HyperFEMTutorials"
 license: MIT
 preferred-citation:
   type: article
