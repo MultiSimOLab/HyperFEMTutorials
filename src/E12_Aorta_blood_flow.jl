@@ -54,7 +54,8 @@
 # ``\int_{\Gamma_i} Z_i A_i\,(\boldsymbol u\cdot\boldsymbol n)(\boldsymbol v\cdot\boldsymbol n)\,\mathrm d\Gamma``,
 # which equals ``Z_i Q_i\int_{\Gamma_i}\boldsymbol v\cdot\boldsymbol n\,\mathrm d\Gamma`` when the normal velocity is
 # uniform on the outlet (area ``A_i``). The values of ``Z_i``, ``C_i``, ``R_i`` are those of the aorta example of
-# HyperFEMKernels.jl (`examples/aorta_cfd/aorta_flow.jl`), taken from published patient data.
+# HyperFEMKernels.jl (`examples/aorta_cfd/aorta_flow.jl`): the descending aorta from Mousavi et al. (2021, Table 6,
+# case «Aneurysmal 1») and the three supra-aortic branches B1–B3 from Youssefi et al. (2018, Table 1, subject A).
 #
 # **Backflow.** During deceleration and diastole blood flows back into the domain through parts of the outlets,
 # and the kinetic energy that enters there can make the computation blow up. The backflow stabilisation
@@ -433,4 +434,10 @@ end
 # - References: I. E. Vignon-Clementel et al., *Outflow boundary conditions for three-dimensional finite element
 #   modeling of blood flow and pressure in arteries*, Comput. Methods Appl. Mech. Eng. 195 (2006) 3776–3796,
 #   DOI 10.1016/j.cma.2005.04.014; T. E. Tezduyar, *Stabilized finite element formulations for incompressible
-#   flow computations*, Adv. Appl. Mech. 28 (1992) 1–44, DOI 10.1016/S0065-2156(08)70153-4.
+#   flow computations*, Adv. Appl. Mech. 28 (1992) 1–44, DOI 10.1016/S0065-2156(08)70153-4;
+#   S. J. Mousavi, R. Jayendiran, S. Farzaneh, S. Campisi, M. Viallon, P. Croisille, S. Avril, *Coupling hemodynamics
+#   with mechanobiology in patient-specific computational models of ascending thoracic aortic aneurysms*, Comput.
+#   Methods Programs Biomed. 205 (2021) 106107, DOI 10.1016/j.cmpb.2021.106107 (Windkessel parameters of the
+#   descending aorta); P. Youssefi, A. Gomez, C. Arthurs, R. Sharma, M. Jahangiri, C. A. Figueroa, *Impact of
+#   patient-specific inflow velocity profile on hemodynamics of the thoracic aorta*, J. Biomech. Eng. 140 (2018)
+#   011002, DOI 10.1115/1.4037857 (Windkessel parameters of the branches).
